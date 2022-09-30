@@ -1,3 +1,9 @@
+import sys
+import os
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
+from sarla.server.src.http_server import server
+
 from prompt_toolkit import prompt, Application, PromptSession
 from prompt_toolkit.styles import Style
 from prompt_toolkit.completion import NestedCompleter
@@ -78,7 +84,7 @@ def main():
             elif input[0] == "set":
                 print("set")
             elif input[0] == "listen":
-                print("listen")
+                server()
             else:
                 print("Invalid command")
         except IndexError:
