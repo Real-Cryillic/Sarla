@@ -1,7 +1,3 @@
-import sys
-import os
-
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from sarla.server.src.http_server import server
 
 from prompt_toolkit import prompt, Application, PromptSession
@@ -62,7 +58,7 @@ def quit():
         return True
 
 
-def main():
+def start():
     print("\033c")  # Clear current terminal
 
     # CLI prompt handler
@@ -89,7 +85,3 @@ def main():
                 print("Invalid command")
         except IndexError:
             print("Enter a command or 'quit' to exit the program.")
-
-
-if __name__ == "__main__":
-    main()
