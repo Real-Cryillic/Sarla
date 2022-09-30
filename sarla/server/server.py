@@ -1,6 +1,3 @@
-import sys
-import os
-
 from sarla.server.src.http_server import server
 
 from prompt_toolkit import prompt, Application, PromptSession
