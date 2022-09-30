@@ -1,0 +1,9 @@
+# misc
+.vscode/*
+*.debug
+*.pyc
+*.venv
+*.DS_STORE
+venv/
+addons/
+__pycache__/
