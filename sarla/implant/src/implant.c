@@ -74,11 +74,11 @@ void Init() {
     Agent.Path = "/";   
 
     // Define data format
-    char *format = "%s\n%s";
+    char *format = "%s\n%s\n%d\n%d";
 
     // Allocate data to encode
-    char *data_to_encode = malloc(strlen(Register.Username) + strlen(Register.Hostname));
-    sprintf(data_to_encode, format, Register.Username, Register.Hostname);
+    char *data_to_encode = malloc(strlen(format) + strlen(Register.Username) + strlen(Register.Hostname));
+    sprintf(data_to_encode, format, Register.Username, Register.Hostname, Register.ProcId, Register.Version);
 
     // Encode data to be encoded
     char *encode_data = malloc(strlen(data_to_encode) * 2);
