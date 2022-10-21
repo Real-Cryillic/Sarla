@@ -91,7 +91,7 @@ void Init() {
         if (hConnect != NULL) {
             HINTERNET hRequest = HttpOpenRequest(hConnect, "POST", Agent.Path, 0, 0, 0, 0, 0);
             if (hRequest != NULL) {
-                HttpAddRequestHeaders(hRequest, content_length, -0, HTTP_ADDREQ_FLAG_ADD);
+                HttpAddRequestHeaders(hRequest, content_length, -1, HTTP_ADDREQ_FLAG_ADD);
                 HttpSendRequest(hRequest, 0, 0, post_buffer, post_buffer_length);
             }
         }
