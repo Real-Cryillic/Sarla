@@ -22,7 +22,8 @@ class requests(BaseHTTPRequestHandler):
 
     def do_POST(self):
         postData = ((self.rfile.read(int(self.headers['content-length']))).decode('utf-8')).rstrip('\r\n\r\n\0')
-        register(postData)
+        register_dict = register(postData)
+        print(register_dict)
 
 
 def server():
