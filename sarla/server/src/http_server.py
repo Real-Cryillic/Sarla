@@ -21,7 +21,9 @@ class requests(BaseHTTPRequestHandler):
         self.wfile.write(self._html("404 Not Found"))
 
     def do_POST(self):
-        postData = ((self.rfile.read(int(self.headers['content-length']))).decode('utf-8')).rstrip('\r\n\r\n\0')
+        postData = (
+            (self.rfile.read(int(self.headers["content-length"]))).decode("utf-8")
+        ).rstrip("\r\n\r\n\0")
         register_dict = register(postData)
         print(register_dict)
 
