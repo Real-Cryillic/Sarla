@@ -9,7 +9,8 @@ def register(data):
     registration_unformatted = registration_unformatted[:-1]
     agent_information = registration_unformatted.split(",")
 
-    job = {"Username": "", "Hostname": "", "Process ID": 0, "Version": 0}
+    job = {"username": "", "hostname": "", "process id": 0, "version": 0, "key":""}
+
     i = 0
     for x in job:
         job[x] = agent_information[i]

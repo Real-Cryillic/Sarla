@@ -1,6 +1,7 @@
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from sarla.server.src.registration import register
+from sarla.server.src.authorization import auth
 
 host = "0.0.0.0"
 port = 8080
@@ -25,8 +26,8 @@ class requests(BaseHTTPRequestHandler):
             (self.rfile.read(int(self.headers["content-length"]))).decode("utf-8")
         ).rstrip("\r\n\r\n\0")
         register_dict = register(postData)
+        beacon_key = auth(register_dict)
         print(register_dict)
-
 
 def server():
     server = HTTPServer((host, port), requests)
