@@ -29,6 +29,7 @@ class requests(BaseHTTPRequestHandler):
         beacon_key = auth(register_dict)
         print(register_dict)
 
+
 def server():
     server = HTTPServer((host, port), requests)
     thread = threading.Thread(None, server.serve_forever)
