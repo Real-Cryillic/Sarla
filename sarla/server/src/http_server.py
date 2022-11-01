@@ -25,6 +25,7 @@ class requests(BaseHTTPRequestHandler):
             (self.rfile.read(int(self.headers["content-length"]))).decode("utf-8")
         ).rstrip("\r\n\r\n\0")
         cookie = process_agent(postData)
+        print(cookie)
         self._set_headers()
         self.wfile.write(self._html(cookie))
 

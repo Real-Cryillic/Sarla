@@ -11,7 +11,7 @@ def auth(data_dict):
     if key == AGENT_KEY:
         beacon_key = abs(generate_key())
         data_dict["key_hash"] = beacon_key
-    # else:
-    # response
+    else:
+        return 0
 
     return beacon_key
