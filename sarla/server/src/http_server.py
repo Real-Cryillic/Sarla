@@ -1,7 +1,6 @@
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from sarla.server.src.registration import register
-from sarla.server.src.authorization import auth
+from sarla.server.src.handler import process_agent
 
 host = "0.0.0.0"
 port = 8080
@@ -25,9 +24,10 @@ class requests(BaseHTTPRequestHandler):
         postData = (
             (self.rfile.read(int(self.headers["content-length"]))).decode("utf-8")
         ).rstrip("\r\n\r\n\0")
-        register_dict = register(postData)
-        beacon_key = auth(register_dict)
-        print(register_dict)
+        cookie = process_agent(postData)
+        print(cookie)
+        self._set_headers()
+        self.wfile.write(self._html(cookie))
 
 
 def server():
