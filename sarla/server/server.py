@@ -12,19 +12,17 @@ port = "443"
 auth_flag = "random"
 
 # prompt color/style
-style = Style.from_dict(
-    {
-        # User input (default text)
-        "": "#884444",
-        # Prompt
-        "server": "#884444",
-        "pipe": "ansicyan",
-        "host": "ansired",
-        "port": "ansigreen",
-        "authflag": "ansimagenta",
-        "default": "#884444",
-    }
-)
+style = Style.from_dict({
+    # User input (default text)
+    "": "#884444",
+    # Prompt
+    "server": "#884444",
+    "pipe": "ansicyan",
+    "host": "ansired",
+    "port": "ansigreen",
+    "authflag": "ansimagenta",
+    "default": "#884444",
+})
 
 # prompt message
 message = [
@@ -39,19 +37,24 @@ message = [
     ("class:pipe", " > "),
 ]
 
-message_completer = NestedCompleter.from_nested_dict(
-    {
-        "help": None,
-        "set": {"version": None, "clock": None, "ip": {"interface": {"brief"}}},
-        "listen": None,
-        "quit": None,
-        "clear": None,
-    }
-)
+message_completer = NestedCompleter.from_nested_dict({
+    "help": None,
+    "set": {
+        "version": None,
+        "clock": None,
+        "ip": {
+            "interface": {"brief"}
+        }
+    },
+    "listen": None,
+    "quit": None,
+    "clear": None,
+})
 
 
 def quit():
-    input = session.prompt("Are you sure you want to quit? (y/n) Default (y): ")
+    input = session.prompt(
+        "Are you sure you want to quit? (y/n) Default (y): ")
     if input.lower() == "n":
         return False
     else:
