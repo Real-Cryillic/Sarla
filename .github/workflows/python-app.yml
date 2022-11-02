@@ -7,7 +7,6 @@ on:
   push:
     branches: [ "main" ]
     branches: [ "dev" ]
-    branches: [ "unit-testing" ]
   pull_request:
     branches: [ "main" ]
 
