@@ -7,6 +7,7 @@ port = 8080
 
 
 class requests(BaseHTTPRequestHandler):
+
     def _set_headers(self):
         self.send_response(200)
         self.send_header("Content-type", "text/html")
@@ -21,9 +22,8 @@ class requests(BaseHTTPRequestHandler):
         self.wfile.write(self._html("404 Not Found"))
 
     def do_POST(self):
-        postData = (
-            (self.rfile.read(int(self.headers["content-length"]))).decode("utf-8")
-        ).rstrip("\r\n\r\n\0")
+        postData = ((self.rfile.read(int(self.headers["content-length"]))
+                     ).decode("utf-8")).rstrip("\r\n\r\n\0")
         cookie = process_agent(postData)
         print(cookie)
         self._set_headers()
