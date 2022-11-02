@@ -8,8 +8,11 @@ def generate_key():
     key = hash(AGENT_KEY)
     return key
 
+
 def generate_id():
-    return 'A-' + ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(4)) 
+    return 'A-' + ''.join(
+        random.SystemRandom().choice(string.ascii_uppercase + string.digits)
+        for _ in range(4))
 
 
 def auth(data_dict):
