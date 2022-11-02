@@ -8,6 +8,7 @@ def test_agent_registration():
     # invoke
     actual = register(data)
     actual.pop('key_hash')
+    actual.pop('agent_id')
 
     # analyze
     assert actual == expected
