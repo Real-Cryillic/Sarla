@@ -1,8 +1,8 @@
 name: Formatting python code
 on:
-  push:
-    paths:
-    - '**.py'
+  pull_request:
+    branches:
+      - main
 jobs:
   autoyapf:
     runs-on: ubuntu-latest
