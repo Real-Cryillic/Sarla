@@ -1,4 +1,3 @@
-from base64 import b64decode
 from sarla.server.src.authorization import auth
 
 
@@ -19,10 +18,10 @@ def register(data):
 
     i = 0
     for x in job:
-        job[x] = agent_information[i]
+        job[x] = data[i]
         i += 1
 
-    beacon_key = auth(job)
+    beacon_key, agent_id = auth(job)
 
     print("\n")
 

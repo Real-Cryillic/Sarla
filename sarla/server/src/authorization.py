@@ -1,3 +1,6 @@
+import random
+import string
+
 AGENT_KEY = "boondoggle"
 
 
@@ -6,12 +9,16 @@ def generate_key():
     return key
 
 
-def auth(data_dict):
-    key = data_dict["key"]
-    if key == AGENT_KEY:
-        beacon_key = abs(generate_key())
-        data_dict["key_hash"] = beacon_key
-    else:
-        return 0
+def generate_id():
+    return 'A-' + ''.join(
+        random.SystemRandom().choice(string.ascii_uppercase + string.digits)
+        for _ in range(4))
 
-    return beacon_key
+
+def auth(data_dict):
+    beacon_key = abs(generate_key())
+    agent_id = generate_id()
+    data_dict["agent_id"] = agent_id
+    data_dict["key_hash"] = beacon_key
+
+    return beacon_key, agent_id
