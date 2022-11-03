@@ -1,28 +1,33 @@
-from sarla.server.src.authorization import auth
+from authorization import generate_id, generate_key
+
+format_dict = {
+    'id':'',
+    'keyword':'',
+    'key':'',
+    'user':'',
+    'host':'',
+    'pid':'',
+    'build':''
+}
 
 
-def register(data):
-    registration_unformatted = str(b64decode(data))
-    registration_unformatted = registration_unformatted[
-        2:len(registration_unformatted)]
-    registration_unformatted = registration_unformatted[:-1]
-    agent_information = registration_unformatted.split(",")
+def register(data, dictionary):
+    job_dictionary = format_dict
+    agent_information = data.split(',')
 
-    job = {
-        "username": "",
-        "hostname": "",
-        "process id": 0,
-        "version": 0,
-        "key": ""
-    }
+    agent_id = generate_id()
 
-    i = 0
-    for x in job:
-        job[x] = data[i]
-        i += 1
+    job_dictionary['id'] = agent_id
+    job_dictionary['user'] = agent_information[0]
+    job_dictionary['host'] = agent_information[1]
+    job_dictionary['pid'] = agent_information[2]
+    job_dictionary['build'] = agent_information[3]
+    job_dictionary['keyword'] = agent_information[4]
 
-    beacon_key, agent_id = auth(job)
+    key = generate_key(job_dictionary['keyword'])
 
-    print("\n")
+    job_dictionary['key'] = key
 
-    return job
+    dictionary[job_dictionary['id']] = job_dictionary
+
+    return key
