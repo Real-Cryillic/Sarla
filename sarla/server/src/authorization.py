@@ -2,7 +2,7 @@ import random
 import string
 
 def generate_key(keyword):
-    key = hash(keyword)
+    key = abs(hash(keyword))
     return key
 
 
