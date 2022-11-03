@@ -1,4 +1,4 @@
-from authorization import generate_id, generate_key
+from sarla.server.src.authorization import generate_id, generate_key
 
 format_dict = {
     'id':'',
