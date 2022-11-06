@@ -1,10 +1,11 @@
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from sarla.server.src.handler import process_agent
+from sarla.server.src.utils.tables import create_table
 
 host = "0.0.0.0"
 port = 8080
-agent_dict = dict()
+local_dict = dict()
 
 class requests(BaseHTTPRequestHandler):
 
@@ -24,7 +25,8 @@ class requests(BaseHTTPRequestHandler):
     def do_POST(self):
         postData = ((self.rfile.read(int(self.headers["content-length"]))
                      ).decode("utf-8")).rstrip("\r\n\r\n\0")
-        cookie = process_agent(postData, agent_dict)
+        cookie = process_agent(postData, local_dict)
+        create_table(local_dict)
         print(cookie)
         self._set_headers()
         self.wfile.write(self._html(cookie))
