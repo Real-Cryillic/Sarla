@@ -1,5 +1,7 @@
 from base64 import b64decode
 from sarla.server.src.registration import register
+from sarla.server.src.utils import settings
+from sarla.server.src.utils import patch
 
 
 def process_agent(data, dictionary):
@@ -20,5 +22,13 @@ def process_agent(data, dictionary):
             print(identifier)
             print(dictionary[key]['key'])
             if str(identifier) == str(dictionary[key]['key']):
-                pass
-                # Send and receive commands here
+                if str(data) == "beacon":
+                    for command_key, command_value in settings.command_queue_table:
+                        if len(command_value) > 0:
+                            command_patch = patch.convert_command_to_patch(command_value)
+                            del settings.command_queue_table[command_key]
+                            return command_patch
+                    pass
+                else:
+                    pass
+                return "This is a command"
