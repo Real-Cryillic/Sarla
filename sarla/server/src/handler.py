@@ -23,11 +23,15 @@ def process_agent(data, dictionary):
             print(dictionary[key]['key'])
             if str(identifier) == str(dictionary[key]['key']):
                 if str(data) == "beacon":
-                    for command_key, command_value in settings.command_queue_table:
-                        if len(command_value) > 0:
-                            command_patch = patch.convert_command_to_patch(command_value)
-                            del settings.command_queue_table[command_key]
-                            return command_patch
+                    print(settings.command_queue_table)
+                    for x, y in settings.command_queue_table.items():
+                        print("hello")
+                        print(x, y)
+                        if x == dictionary[key]['id']:
+                            if len(y) > 0:
+                                command_patch = patch.convert_command_to_patch(y)
+                                del settings.command_queue_table[x]
+                                return command_patch
                     pass
                 else:
                     pass

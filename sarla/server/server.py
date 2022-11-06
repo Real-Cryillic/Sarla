@@ -88,6 +88,11 @@ def start():
                 server()
             elif input[0] == "jobs":
                 print(settings.agent_table.table)
+            elif input[0] in settings.agent_dict:
+                agent_active = str(input[0])
+                print(agent_active)
+            elif input[0] in settings.command_patch_list:
+                settings.command_queue_table[agent_active] = input[0]
             else:
                 print("Invalid command")
         except IndexError:
