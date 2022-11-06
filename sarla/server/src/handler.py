@@ -29,7 +29,8 @@ def process_agent(data, dictionary):
                         print(x, y)
                         if x == dictionary[key]['id']:
                             if len(y) > 0:
-                                command_patch = patch.convert_command_to_patch(y)
+                                command_patch = patch.convert_command_to_patch(
+                                    y)
                                 del settings.command_queue_table[x]
                                 return command_patch
                     pass

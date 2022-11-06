@@ -1,5 +1,6 @@
 from sarla.server.src.utils import settings
 
+
 def convert_command_to_patch(command):
     settings.command_patch_list = {
         "whoami": 0xAA,
