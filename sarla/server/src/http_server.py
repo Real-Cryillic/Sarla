@@ -7,6 +7,7 @@ host = "0.0.0.0"
 port = 8080
 local_dict = dict()
 
+
 class requests(BaseHTTPRequestHandler):
 
     def _set_headers(self):

@@ -3,9 +3,10 @@ from sarla.server.src.utils import settings
 
 
 def create_table(data):
-    table_data = [
-        ['Agent ID', 'Keyword', 'Key', 'Username', 'Hostname', 'Process ID', 'Build']
-    ]
+    table_data = [[
+        'Agent ID', 'Keyword', 'Key', 'Username', 'Hostname', 'Process ID',
+        'Build'
+    ]]
 
     for key in data:
         row = []
