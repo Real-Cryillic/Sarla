@@ -17,5 +17,8 @@ def process_agent(data, dictionary):
         return key
     else:
         for key in dictionary:
-            if identifier == key:
+            print(identifier)
+            print(dictionary[key]['key'])
+            if str(identifier) == str(dictionary[key]['key']):
                 pass
+                # Send and receive commands here
