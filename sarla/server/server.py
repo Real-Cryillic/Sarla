@@ -1,4 +1,5 @@
 from sarla.server.src.http_server import server
+from sarla.server.src.utils import settings
 
 from prompt_toolkit import prompt, Application, PromptSession
 from prompt_toolkit.styles import Style
@@ -10,6 +11,7 @@ session = PromptSession()
 host = "0.0.0.0"
 port = "443"
 auth_flag = "random"
+global agent_table
 
 # prompt color/style
 style = Style.from_dict({
@@ -84,6 +86,8 @@ def start():
                 print("set")
             elif input[0] == "listen":
                 server()
+            elif input[0] == "jobs":
+                print(settings.agent_table.table)
             else:
                 print("Invalid command")
         except IndexError:
