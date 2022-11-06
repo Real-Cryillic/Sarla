@@ -1,13 +1,13 @@
 from sarla.server.src.authorization import generate_id, generate_key
 
 format_dict = {
-    'id':'',
-    'keyword':'',
-    'key':'',
-    'user':'',
-    'host':'',
-    'pid':'',
-    'build':''
+    'id': '',
+    'keyword': '',
+    'key': '',
+    'user': '',
+    'host': '',
+    'pid': '',
+    'build': ''
 }
 
 

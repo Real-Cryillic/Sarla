@@ -1,21 +1,20 @@
-from sarla.server.src.registration import register
+from sarla.server.src.handler import process_agent
 
 
 def test_agent_registration():
-    # setup
-    data = 'VGVzdFVzZXIsVGVzdC1Cb3gsMTIzNCwxMjM0LGJvb25kb2dnbGU='
+    data = 'cmVnaXN0ZXI6VGVzdFVzZXIsVGVzdC1Cb3gsMTIzNCwxMjM0LGJvb25kb2dnbGU='
+    dictionary = dict()
     expected = {
-        "username": "TestUser",
-        "hostname": "Test-Box",
-        "process id": '1234',
-        "version": '1234',
-        "key": "boondoggle"
+        "keyword": "boondoggle",
+        "user": "TestUser",
+        "host": "Test-Box",
+        "pid": '1234',
+        "build": '1234',
     }
-
-    # invoke
-    actual = register(data)
-    actual.pop('key_hash')
-    actual.pop('agent_id')
-
-    # analyze
-    assert actual == expected
+    process_agent(data, dictionary)
+    for key in dictionary:
+        dictionary[key].pop('id')
+        dictionary[key].pop('key')
+        print(dictionary[key])
+        print(expected)
+        assert expected == dictionary[key]
