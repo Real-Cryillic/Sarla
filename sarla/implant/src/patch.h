@@ -1,0 +1,1 @@
+unsigned char patch_list_name[3] = {0xAA, 0xAB, 0xAC};
