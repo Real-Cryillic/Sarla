@@ -1,0 +1,1 @@
+char paths[5][11] = {"index", "images", "download", "news", "about"};

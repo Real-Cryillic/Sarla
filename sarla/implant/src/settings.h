@@ -1,6 +1,6 @@
 struct job_registration {
-    CHAR hostname[MAX_PATH];
-    CHAR username[MAX_PATH];
+    CHAR hostname[256];
+    CHAR username[256];
     DWORD process_id;
     DWORD version;
 }job;
