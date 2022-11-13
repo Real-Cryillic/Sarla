@@ -29,7 +29,7 @@ class requests(BaseHTTPRequestHandler):
                      ).decode("utf-8")).rstrip("\r\n\r\n\0")
         cookie = process_agent(postData, settings.agent_dict)
         create_table(settings.agent_dict)
-        print(cookie)
+        print("\nResponse sent to agent: ", cookie)
         self._set_headers()
         self.wfile.write(self._html(cookie))
 
