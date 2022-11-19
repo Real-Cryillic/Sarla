@@ -230,7 +230,7 @@ void Beacon() {
 void Encode(char* data_to_encode) {
     CHAR *data_encode = (CHAR*)malloc(strlen(data_to_encode) * 2);
     DWORD data_encode_len = strlen(data_to_encode) * 2;
-    internal.win32.call.CryptBinaryToStringA(data_to_encode, strlen(data_to_encode), CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, data_encode, &data_encode_len);
+    CryptBinaryToStringA(data_to_encode, strlen(data_to_encode), CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, data_encode, &data_encode_len);
 
     free(data_to_encode);
 
@@ -391,7 +391,6 @@ int main(int argc, char* argv[]) {
     internal.win32.call.InternetQueryDataAvailable =    (INTERNETQUERYDATAAVAILABLE)    GetProcAddress(internal.win32.module.wininet, "InternetQueryDataAvailable");
     internal.win32.call.InternetReadFile =              (INTERNETREADFILE)              GetProcAddress(internal.win32.module.wininet, "InternetReadFile");
     internal.win32.call.InternetCloseHandle =           (INTERNETCLOSEHANDLE)           GetProcAddress(internal.win32.module.wininet, "InternetCloseHandle");
-    internal.win32.call.CryptBinaryToStringA =          (CRYPTBINARYTOSTRINGA)          GetProcAddress(internal.win32.module.crypt32, "CryptBinaryToStringA");
 
     Register();
 
