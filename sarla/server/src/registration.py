@@ -24,7 +24,7 @@ def register(data, dictionary):
     job_dictionary['name'] = agent_information[3]
     job_dictionary['domain'] = agent_information[4]
     job_dictionary['build'] = agent_information[5]
-    job_dictionary['keyword'] = agent_information[4]
+    job_dictionary['keyword'] = agent_information[6]
 
     if job_dictionary['keyword'] == keyword:
         key = generate_key(job_dictionary['keyword'])
