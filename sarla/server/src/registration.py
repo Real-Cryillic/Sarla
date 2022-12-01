@@ -45,4 +45,3 @@ def register(data, dictionary):
         return key
     else:
         return False
-
