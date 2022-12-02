@@ -1,0 +1,5 @@
+---
+# vars file for deploy
+
+sarla_windows_location: "C:\\Windows\\System32\\sarla.exe"
+sarla_windows_binary: "sarla.exe"
