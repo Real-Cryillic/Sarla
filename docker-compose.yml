@@ -1,0 +1,4 @@
+services:
+  sarla:
+    image: cryillic/sarla:ubhs2022
+    restart: unless-stopped
