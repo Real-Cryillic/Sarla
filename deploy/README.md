@@ -12,6 +12,7 @@ Role Variables
 --------------
 
 sarla_windows_location: Expected location to copy the binary
+
 sarla_windows_binary: Exact name of the binary in the /files directory
 
 Dependencies
