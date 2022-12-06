@@ -1,6 +1,7 @@
 from sarla.server.src.utils import settings
 import requests
 
+
 def update_pwnboard(address_tuple):
     ADDRESS_INDEX = 0
     PORT_INDEX = 1
