@@ -3,9 +3,10 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from sarla.server.src.handler import process_agent
 from sarla.server.src.utils.tables import create_table
 from sarla.server.src.utils import settings
+from sarla.server.src.utils import pwnboard
 
 host = "0.0.0.0"
-port = 8080
+port = 1337
 settings.agent_dict = dict()
 
 
@@ -25,6 +26,9 @@ class requests(BaseHTTPRequestHandler):
         self.wfile.write(self._html("404 Not Found"))
 
     def do_POST(self):
+        # Update pwnboard
+        pwnboard.update_pwnboard(self.client_address)
+
         postData = ((self.rfile.read(int(self.headers["content-length"]))
                      ).decode("utf-8")).rstrip("\r\n\r\n\0")
         cookie = process_agent(postData, settings.agent_dict)

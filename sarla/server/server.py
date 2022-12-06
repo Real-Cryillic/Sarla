@@ -9,7 +9,7 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 # global variables
 session = PromptSession()
 host = "0.0.0.0"
-port = "443"
+port = "1337"
 auth_flag = "random"
 global agent_table
 

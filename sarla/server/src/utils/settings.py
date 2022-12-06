@@ -3,6 +3,8 @@ def init():
     global agent_active
     global agent_dict
     global command_queue_table
+    global pwnboard
+    pwnboard = "http://pwnboard.win/pwn/boxaccess"
     command_queue_table = dict()
     global command_patch_list
     command_patch_list = {
