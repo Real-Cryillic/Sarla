@@ -1,5 +1,6 @@
 from termcolor import colored 
 import click
+from sarla.server.common import settings
 import sarla.server.server as server
 import sarla.client.client as client
 
@@ -11,6 +12,7 @@ def command(status):
         client.run()
 
     elif status == "server":
+        settings.init_globals()
         server.run()
 
     else:
