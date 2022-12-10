@@ -1,3 +1,4 @@
+from sarla.client.utils import ascii
 from prompt_toolkit import PromptSession, prompt
 from prompt_toolkit.styles import Style
 from prompt_toolkit.completion import NestedCompleter
@@ -6,7 +7,6 @@ from rich.console import Console
 from rich.theme import Theme
 from rich.padding import Padding
 from rich.table import Table
-from sarla.server.common import settings
 
 # prompt_toolkit globals
 session = PromptSession()
@@ -32,7 +32,7 @@ help_menu = {
     "clear": "Clear current console window",
     "select": "Set a global variable",  # Drop down of available agents
     "agents": "Print a table of current beacons",
-    "tasks": "Print a table of currently queued tasks",  # Queue
+    "tasks": "Print a table of currently queued tasks",  # Qeue
     "history": "Print the history for the current session",
 }
 
@@ -51,9 +51,8 @@ Red	            #ff5555
 Yellow	        #f1fa8c
 """
 
-# prompt message
-# Sarla / ( 0.0.0.0 : 1337 )  >
-message = [
+# prompt message [Sarla / ( 0.0.0.0 : 1337 )  >]
+message = [ 
     ("class:server", " Sarla / "),
     ("class:default", "( "),
     ("class:host", host),
@@ -128,6 +127,7 @@ def run():
     Main function for prompt session and command parsing
     """
     print("\033c")  # Clear the current terminal
+    ascii.print_ascii(console) # Print ascii logo
 
     while True:
         input = session.prompt(
