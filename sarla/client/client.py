@@ -25,6 +25,16 @@ console = Console(theme=dracula)
 # other globals
 host = "0.0.0.0"
 port = 1337
+help_menu = {
+    "help": "Print help menu",
+    "listen": "Start HTTP listener",
+    "quit": "Quit the current session",
+    "clear": "Clear current console window",
+    "select": "Set a global variable",  # Drop down of available agents
+    "agents": "Print a table of current beacons",
+    "tasks": "Print a table of currently queued tasks",  # Queue
+    "history": "Print the history for the current session",
+}
 
 """
 Color theme:
@@ -79,19 +89,33 @@ message_completer = NestedCompleter.from_nested_dict(
     }
 )
 
-help_menu = {
-    "help": "Print help menu",
-    "listen": "Start HTTP listener",
-    "quit": "Quit the current session",
-    "clear": "Clear current console window",
-    "select": "Set a global variable",  # Drop down of available agents
-    "agents": "Print a table of current beacons",
-    "tasks": "Print a table of currently queued tasks",  # Queue
-    "history": "Print the history for the current session",
-}
+
+def help():
+    """
+    Print a help menu using the rich library table
+
+    Menu entries are defined from help_menu glopbal
+    """
+    # Initialize rich table
+    table = Table(expand=True)
+
+    # Add table headers
+    table.add_column("Command", style="#f8f8f2")
+    table.add_column("Description")
+
+    # Add help menu entries as rows
+    for key in help_menu:
+        table.add_row(key, help_menu[key])
+
+    # Add padding to table
+    output = Padding(table, (0, 1, 0, 1), style="default")
+    console.print(output)
 
 
 def quit():
+    """
+    Confirm user wants to exit the prompt session and quit the terminal if confirmed
+    """
     input = session.prompt("Are you sure you want to quit? (y/n) Default (y): ")
     if input.lower() == "n":
         return False
@@ -100,7 +124,10 @@ def quit():
 
 
 def run():
-    print("\033c")
+    """
+    Main function for prompt session and command parsing
+    """
+    print("\033c")  # Clear the current terminal
 
     while True:
         input = session.prompt(
@@ -108,20 +135,17 @@ def run():
             style=style,
             completer=message_completer,
             auto_suggest=AutoSuggestFromHistory(),
-        ).split()
+        )
 
         try:
+            if input == "":
+                continue
+
+            input = input.split()
             COMMAND = input[0].lower()
 
             if COMMAND == "help":
-                table = Table(expand=True)
-                table.add_column("Command", style="#f8f8f2")
-                table.add_column("Description")
-                for key in help_menu:
-                    table.add_row(key, help_menu[key])
-
-                output = Padding(table, (0, 1, 0, 1), style="default")
-                console.print(output)
+                help()
 
             elif COMMAND == "quit":
                 if quit() == True:
@@ -130,6 +154,9 @@ def run():
             elif COMMAND == "exit":
                 if quit() == True:
                     return 0
+
+            elif COMMAND == "clear":
+                print("\033c")
 
             else:
                 output = Padding("Error: unknown command", (1, 2), style="error")
