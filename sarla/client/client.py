@@ -158,6 +158,26 @@ def run():
             elif COMMAND == "clear":
                 print("\033c")
 
+            elif COMMAND == "listen":
+                output = Padding("Warning: command in development", (1, 2), style="warning")
+                console.print(output)
+
+            elif COMMAND == "select":
+                output = Padding("Warning: command in development", (1, 2), style="warning")
+                console.print(output)
+
+            elif COMMAND == "agents":
+                output = Padding("Warning: command in development", (1, 2), style="warning")
+                console.print(output)
+
+            elif COMMAND == "tasks":
+                output = Padding("Warning: command in development", (1, 2), style="warning")
+                console.print(output)
+
+            elif COMMAND == "history":
+                output = Padding("Warning: command in development", (1, 2), style="warning")
+                console.print(output)
+
             else:
                 output = Padding("Error: unknown command", (1, 2), style="error")
                 console.print(output)
