@@ -1,4 +1,5 @@
 from sarla.client.utils import ascii
+import sarla.server.server as server
 from prompt_toolkit import PromptSession, prompt
 from prompt_toolkit.styles import Style
 from prompt_toolkit.completion import NestedCompleter
@@ -52,7 +53,7 @@ Yellow	        #f1fa8c
 """
 
 # prompt message [Sarla / ( 0.0.0.0 : 1337 )  >]
-message = [ 
+message = [
     ("class:server", " Sarla / "),
     ("class:default", "( "),
     ("class:host", host),
@@ -127,7 +128,7 @@ def run():
     Main function for prompt session and command parsing
     """
     print("\033c")  # Clear the current terminal
-    ascii.print_ascii(console) # Print ascii logo
+    ascii.print_ascii(console)  # Print ascii logo
 
     while True:
         input = session.prompt(
@@ -159,28 +160,44 @@ def run():
                 print("\033c")
 
             elif COMMAND == "listen":
-                output = Padding("Warning: command in development", (1, 2), style="warning")
-                console.print(output)
+                try:
+                    output = Padding(
+                        "[warning]Warning:[/warning] command in development", (1, 2), style="default"
+                    )
+                    console.print(output)
+
+                    server.run(console)
+                except OSError:
+                    output = Padding("[error]Error:[/error] address already in use", (1, 2), style="default")
+                    console.print(output)
 
             elif COMMAND == "select":
-                output = Padding("Warning: command in development", (1, 2), style="warning")
+                output = Padding(
+                        "[warning]Warning:[/warning] command in development", (1, 2), style="default"
+                    )
                 console.print(output)
 
             elif COMMAND == "agents":
-                output = Padding("Warning: command in development", (1, 2), style="warning")
+                output = Padding(
+                    "[warning]Warning:[/warning] command in development", (1, 2), style="default"
+                )
                 console.print(output)
 
             elif COMMAND == "tasks":
-                output = Padding("Warning: command in development", (1, 2), style="warning")
+                output = Padding(
+                        "[warning]Warning:[/warning] command in development", (1, 2), style="default"
+                    )
                 console.print(output)
 
             elif COMMAND == "history":
-                output = Padding("Warning: command in development", (1, 2), style="warning")
+                output = Padding(
+                        "[warning]Warning:[/warning] command in development", (1, 2), style="default"
+                    )
                 console.print(output)
 
             else:
-                output = Padding("Error: unknown command", (1, 2), style="error")
+                output = Padding("[error]Error:[/error] unknown command", (1, 2), style="default")
                 console.print(output)
         except IndexError:
-            output = Padding("Error: could not process input", (1, 2), style="error")
+            output = Padding("[error]Error:[/error] could not process input", (1, 2), style="default")
             console.print(output)
