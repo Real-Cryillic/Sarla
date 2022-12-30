@@ -151,11 +151,7 @@ void Request() {
         cookie = (CHAR*) realloc(cookie, buffer_length + 1); // Allocate bytes to cookie
         sprintf_s(cookie, buffer_length + 1, "%s\0", query_buffer); // Write buffer + null byte to allocated cookie
 
-        // Convert string pointer to be modifiable
-        // This is needed so that tokenization works properly
-        mod_cookie = _strdup(cookie);
-
-        printf("Cookie: %s\n", mod_cookie);
+        printf("Cookie: %s\n", cookie);
 
         goto process_cookie;
 
@@ -163,19 +159,18 @@ void Request() {
         printf("Error: %lu\n", dw_error);
     }
 
+    // Tokenize the cookie and either store or send to processed as a command
     process_cookie:
-        printf("String: %s\n", mod_cookie);
-        // printf("String: %s\n", string);
         if (wurm.beacon.count <= 1) {
-            CHAR* token = strtok(mod_cookie, " ");
+            CHAR* token = strtok(cookie, " ");
 
-            if (strtok(NULL, " ") == NULL && strlen(mod_cookie) == 20) {
+            if (strtok(NULL, " ") == NULL && strlen(cookie) == 20) {
                 wurm.auth.cookie = token;
             } else {
                 printf("Error: Unknown response");
             }
         } else {
-            CHAR* token = strtok(mod_cookie, " ");
+            CHAR* token = strtok(cookie, " ");
             //if (strtok(NULL, " ") == NULL) {
                 //printf("hello");
                 //printf("Token: %s\n", token);
