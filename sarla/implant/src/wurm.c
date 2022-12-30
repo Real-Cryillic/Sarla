@@ -41,9 +41,19 @@ struct {
 
 unsigned char patch_list_name[patch_length] = {0xAA, 0xAB};
 
-INT AA$shell(CHAR* input, CHAR** output) {
-    system(input);
-    return 0;
+BOOL AA$shell(CHAR* input, CHAR** output) {
+    FILE *fp;
+    char var[100000];
+
+    fp = popen(input, "r");
+    while (fgets(var, sizeof(var), fp) != NULL) {
+        printf("%s", var);
+        printf("var%s", var);
+        *output = (CHAR*) calloc(strlen(var) + 1, sizeof(CHAR));
+        strcat_s(*output, strlen(var) + 1, var);
+    }
+    pclose(fp);
+    return TRUE;
 }
 
 BOOL AB$whoami(CHAR* input, CHAR** output) {
