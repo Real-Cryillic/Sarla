@@ -43,18 +43,33 @@ unsigned char patch_list_name[patch_length] = {0xAA, 0xAB};
 
 BOOL AA$shell(CHAR* input, CHAR** output) {
     printf("Attempting to execute: %s\n", input);
-    FILE *fp;
-    char var[100000];
+    FILE *out;
+    CHAR buf[100];
+    CHAR* str = NULL;
+    CHAR* temp = NULL;
+    unsigned int size = 1;
+    unsigned int strlength;
 
-    fp = popen(input, "r");
-    while (fgets(var, sizeof(var), fp) != NULL) {
-        printf("%s", var);
-        printf("var%s", var);
-        *output = (CHAR*) calloc(strlen(var) + 1, sizeof(CHAR));
-        strcat_s(*output, strlen(var) + 1, var);
+    if (NULL == (out = popen(input, "r"))) {
+        perror("popen");
+        exit(EXIT_FAILURE);
     }
-    pclose(fp);
 
+    while (fgets(buf, sizeof(buf), out) != NULL) {
+        strlength = strlen(buf);
+        temp = realloc(str, size + strlength);  // allocate room for the buf that gets appended
+        if (temp == NULL) {
+            // allocation error
+        } else {
+            str = temp;
+        }
+        strcpy(str + size - 1, buf);     // append buffer to str
+        size += strlength; 
+    }
+
+    printf("Out: %s", str);
+
+    pclose(out);
     return TRUE;
 }
 
