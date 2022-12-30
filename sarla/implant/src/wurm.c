@@ -86,7 +86,8 @@ void Request() {
     HINTERNET hConnect; // Must be closed
     HINTERNET hRequest; // Must be closed
     CHAR* cookie = NULL;
-    CHAR* query_buffer = NULL;
+    CHAR* query_buffer = NULL; 
+    CHAR* mod_cookie = NULL;
     DWORD read_buffer;
     DWORD buffer_length = 0;
     DWORD available_size = 0;  
@@ -150,7 +151,11 @@ void Request() {
         cookie = (CHAR*) realloc(cookie, buffer_length + 1); // Allocate bytes to cookie
         sprintf_s(cookie, buffer_length + 1, "%s\0", query_buffer); // Write buffer + null byte to allocated cookie
 
-        printf("Cookie: %s\n", cookie);
+        // Convert string pointer to be modifiable
+        // This is needed so that tokenization works properly
+        mod_cookie = _strdup(cookie);
+
+        printf("Cookie: %s\n", mod_cookie);
 
         goto process_cookie;
 
@@ -159,28 +164,31 @@ void Request() {
     }
 
     process_cookie:
+        printf("String: %s\n", mod_cookie);
+        // printf("String: %s\n", string);
         if (wurm.beacon.count <= 1) {
-            CHAR* token = strtok(cookie, " ");
+            CHAR* token = strtok(mod_cookie, " ");
 
-            if (strtok(NULL, " ") == NULL && strlen(cookie) == 20) {
-                wurm.auth.cookie = cookie;
+            if (strtok(NULL, " ") == NULL && strlen(mod_cookie) == 20) {
+                wurm.auth.cookie = token;
             } else {
                 printf("Error: Unknown response");
             }
         } else {
-            CHAR* token = strtok(cookie, " ");
-            if (strtok(NULL, " ") == NULL) {
-                printf(token);
+            CHAR* token = strtok(mod_cookie, " ");
+            //if (strtok(NULL, " ") == NULL) {
+                //printf("hello");
+                //printf("Token: %s\n", token);
                 // Process(cookie, input);
-            } else {
-                while (token != NULL) {
-                    printf(token);
-                    token = strtok(NULL, " ");
-                }
-                
-                CHAR* input = NULL;
-                // Process(cookie, input);
+            //} else {
+            while (token != NULL) {
+                printf("Token: %s\n", token);
+                token = strtok(NULL, " ");
             }
+                
+                //CHAR* input = NULL;
+                // Process(cookie, input);
+            //}
         }
 
     // Clean up memory and handles
