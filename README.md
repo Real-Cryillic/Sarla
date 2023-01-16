@@ -51,18 +51,13 @@
 
 ### Installation
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
+1. Clone the repository
    ```sh
-   git clone https://github.com/github_username/repo_name.git
+   git clone https://github.com/Real-Cryillic/Sarla
    ```
-3. Install NPM packages
+2. Install required dependencies
    ```sh
-   npm install
-   ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
+   poetry install
    ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -71,9 +66,22 @@
 
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
-
 _For more examples, please refer to the [Documentation](https://example.com)_
+
+* Start the client
+
+   ```sh
+   poetry run python sarla.py client
+   ```
+
+* Start the server
+
+   ```sh
+   poetry run python sarla.py client
+   listen
+   ```
+   
+   Note: This will change in future releases
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
