@@ -24,12 +24,25 @@ def process_agent(data, dictionary):
     beacon_type = seperated_data[0]
     data = seperated_data[1]
 
+    print(beacon_type)
+    print(data)
+
     if beacon_type == 'register':
         key = register(data, dictionary)
         return key
 
     elif beacon_type == 'beacon':
-        return "beacon"
+        beacon_origin = ""
+        for key in dictionary:
+            if str(data) == str(dictionary[key]['key']):
+                beacon_origin = key
+        if beacon_origin != "":
+            output = Padding("[success]" + beacon_origin + "[success] checked in[/success] ", (1, 2), style="#f8f8f2")
+            console.print(output)
+        else: 
+            output = Padding("Error: unknown beacon type attempted to connect", (0, 2), style="error")
+            console.print(output)
+
     elif beacon_type == 'output':
         return "output"
     else:
