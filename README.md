@@ -23,6 +23,7 @@
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
+[![Commit Activity][commit-shield]][commit-url]
 
 
 
@@ -105,6 +106,8 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 [issues-shield]: https://img.shields.io/github/issues/Real-Cryillic/Sarla.svg?style=for-the-badge
 [issues-url]: https://github.com/Real-Cryillic/Sarla/issues
 [license-shield]: https://img.shields.io/github/license/Real-Cryillic/Sarla.svg?style=for-the-badge
+[commit-url]: https://github.com/Real-Cryillic/Sarla/commits/
+[commit-shield]: https://img.shields.io/github/commit-activity/m/Real-Cryillic/Sarla?style=for-the-badge
 [license-url]: https://github.com/Real-Cryillic/Sarla/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/linkedin_username
