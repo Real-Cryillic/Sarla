@@ -2,6 +2,7 @@ from base64 import b64decode
 from rich.console import Console
 from rich.theme import Theme
 from rich.padding import Padding
+from sarla.server.src.negotiate import negotiate
 from sarla.server.src.register import register
 
 # rich globals
@@ -27,11 +28,15 @@ def process_agent(data, dictionary):
     print(beacon_type)
     print(data)
 
-    if beacon_type == 'register':
+    if beacon_type == "0":
+       key = negotiate(data, dictionary)
+       return key 
+
+    elif beacon_type == "1":
         key = register(data, dictionary)
         return key
 
-    elif beacon_type == 'beacon':
+    elif beacon_type == "2":
         beacon_origin = ""
         for key in dictionary:
             if str(data) == str(dictionary[key]['key']):
@@ -43,7 +48,7 @@ def process_agent(data, dictionary):
             output = Padding("Error: unknown beacon type attempted to connect", (0, 2), style="error")
             console.print(output)
 
-    elif beacon_type == 'output':
+    elif beacon_type == "3":
         return "output"
     else:
         output = Padding("Error: unknown beacon type attempted to connect", (0, 2), style="error")

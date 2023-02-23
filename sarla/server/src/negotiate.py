@@ -15,7 +15,7 @@ dracula = Theme(
 console = Console(theme=dracula)
 
 # other globals
-keyword = "licketysplit" # This should be updated as a global
+keyword = "schistosomiasis" 
 
 dictionary_format = {
     'host': '',
@@ -26,29 +26,20 @@ dictionary_format = {
     'keyword': ''
 }
 
-def register(data, dictionary):
-    job_dictionary = dictionary_format
-    agent_information = data.split(',')
+def negotiate(data, dictionary):
+    if data == keyword:
+        job_dictionary = dictionary_format
+        agent_id = auth.generate_id()
 
-    agent_id = auth.generate_id()
-    output = Padding("[success]New agent checked in:[/success] " + agent_id, (1, 2), style="#f8f8f2")
-    console.print(output)
+        output = Padding("[success]New agent attempted to negotiate key:[/success] " + agent_id, (1, 2), style="#f8f8f2")
+        console.print(output)
 
-    i = 0
-    for key in job_dictionary:
-        job_dictionary[key] = agent_information[i]
-        print(agent_information[i], "hello")
-        i += 1
-
-    if job_dictionary['keyword'] == keyword:
-        key = auth.generate_key(job_dictionary['keyword'])
-        
         job_dictionary['id'] = agent_id
         job_dictionary['key'] = key
 
         dictionary[job_dictionary['id']] = job_dictionary
 
+        key = auth.generate_key(data)
         return key
-
-    else:
+    else:   
         return False
