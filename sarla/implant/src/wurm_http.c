@@ -168,8 +168,8 @@ void http_request() {
         if (beacon.count <= 1) {
             CHAR* token = strtok(response, " ");
 
-            if (strtok(NULL, " ") == NULL && strlen(response) == 20) {
-                auth.cookie = token;
+            if (strtok(NULL, " ") == NULL && strlen(response) > 10) {
+                auth.cookie = _strdup(token);
             } else {
                 log_error("Unknown response");
             }
@@ -363,7 +363,7 @@ int main(int argc, char* argv[]) {
     transport.path = "blog";
     transport.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36";
 
-    auth.cookie = "beanpocolypse";
+    // auth.cookie = "";
     auth.keyword = "schistosomiasis";
 
     log_info("Path: %s", transport.path);
