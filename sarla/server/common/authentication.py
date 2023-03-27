@@ -7,5 +7,5 @@ def generate_id():
     return id
 
 def generate_key(keyword):
-    key = abs(hash(keyword))
+    key = str(abs(hash(keyword)))
     return key

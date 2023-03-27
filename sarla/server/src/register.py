@@ -14,41 +14,19 @@ dracula = Theme(
 )
 console = Console(theme=dracula)
 
-# other globals
-keyword = "licketysplit" # This should be updated as a global
-
-dictionary_format = {
-    'host': '',
-    'user': '',
-    'pid': '',
-    'name': '',
-    'arch': '',
-    'keyword': ''
-}
-
 def register(data, dictionary):
-    job_dictionary = dictionary_format
     agent_information = data.split(',')
 
-    agent_id = auth.generate_id()
-    output = Padding("[success]New agent checked in:[/success] " + agent_id, (1, 2), style="#f8f8f2")
-    console.print(output)
+    for id in dictionary:
+        if (dictionary[id]['key'] == agent_information[0]):
+            output = Padding("[success]Agent registered:[/success] " + str(dictionary[id]['id']), (1, 2), style="#f8f8f2")
+            console.print(output)
 
-    i = 0
-    for key in job_dictionary:
-        job_dictionary[key] = agent_information[i]
-        print(agent_information[i], "hello")
-        i += 1
-
-    if job_dictionary['keyword'] == keyword:
-        key = auth.generate_key(job_dictionary['keyword'])
-        
-        job_dictionary['id'] = agent_id
-        job_dictionary['key'] = key
-
-        dictionary[job_dictionary['id']] = job_dictionary
-
-        return key
-
-    else:
-        return False
+            i = 1
+            for field in dictionary[id]:
+                if dictionary[id][field] == "":
+                    dictionary[id][field] = agent_information[i]
+                    i += 1
+            return True
+        else:
+            return False

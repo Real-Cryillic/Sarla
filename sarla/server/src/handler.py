@@ -25,16 +25,13 @@ def process_agent(data, dictionary):
     beacon_type = seperated_data[0]
     data = seperated_data[1]
 
-    print(beacon_type)
-    print(data)
-
     if beacon_type == "0":
        key = negotiate(data, dictionary)
        return key 
 
     elif beacon_type == "1":
-        key = register(data, dictionary)
-        return key
+        response = register(data, dictionary)
+        return response
 
     elif beacon_type == "2":
         beacon_origin = ""

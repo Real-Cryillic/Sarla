@@ -23,7 +23,8 @@ dictionary_format = {
     'pid': '',
     'name': '',
     'arch': '',
-    'keyword': ''
+    'key': '',
+    'id': ''
 }
 
 def negotiate(data, dictionary):
@@ -34,12 +35,13 @@ def negotiate(data, dictionary):
         output = Padding("[success]New agent attempted to negotiate key:[/success] " + agent_id, (1, 2), style="#f8f8f2")
         console.print(output)
 
+        key = auth.generate_key(data)
+
         job_dictionary['id'] = agent_id
         job_dictionary['key'] = key
 
         dictionary[job_dictionary['id']] = job_dictionary
 
-        key = auth.generate_key(data)
         return key
     else:   
         return False
