@@ -324,6 +324,7 @@ void negotiate_key(CHAR* keyword) {
 
     data.status = 0;
     data.format = "%d:%s";
+    transport.path = "api/negotiate";
 
     DWORD pointer_length = strlen(data.format) + 4 + strlen(auth.keyword);
     CHAR* data_pointer = malloc(pointer_length);

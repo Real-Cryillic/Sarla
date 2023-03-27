@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sarla C2</title>
+    <style>
+        .todo {
+            padding: 20px;
+            margin: 10px;
+            background-color: #eee;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sarla</h1>
+    <hr>
+    <div class="content">
+        <hr>
+        {% for agent in agents %}
+            <div class="todo">
+                <p>{{ todo['id'] }}</p>
+            </div>
+        {% endfor %}
+
+    </div>
+</body>
+</html>
