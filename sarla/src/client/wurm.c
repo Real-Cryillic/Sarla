@@ -248,6 +248,7 @@ void register_device() {
 
     data.status = 1;
     data.format = "%d:%s,%s,%s,%lu,%s,%s";
+    transport.path = "api/register";
 
     if (GetComputerNameA(info.hostname, &default_length)) {
         log_info("Hostname %s", info.hostname);
