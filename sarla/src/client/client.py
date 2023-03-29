@@ -2,6 +2,8 @@ from prompt_toolkit import PromptSession, prompt
 from prompt_toolkit.styles import Style
 from prompt_toolkit.completion import NestedCompleter
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+import requests
+import json
 from rich.console import Console
 from rich.theme import Theme
 from rich.padding import Padding
@@ -102,6 +104,13 @@ def run():
 
             if command == "help":
                 help()
+
+            elif command == "agents":
+                url = "http://127.0.0.1:5000/api/client/agents"
+                response = requests.get(url)
+                response_json = json.dumps(response.json(), indent=4)
+
+                console.print(response_json)
 
         except IndexError:
             output = Padding("[error]Error:[/error] could not process input", (1, 2), style="default")
