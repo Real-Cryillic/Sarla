@@ -9,7 +9,7 @@ from rich.theme import Theme
 from rich.padding import Padding
 from rich.table import Table
 
-from sarla.src.client.common import ascii
+from sarla.src.client.common import ascii, tables
 
 session = PromptSession()
 
@@ -110,7 +110,13 @@ def run():
                 response = requests.get(url)
                 response_json = json.dumps(response.json(), indent=4)
 
-                console.print(response_json)
+                print(response_json)
+
+                data = json.loads(response_json)
+
+                print(data)
+
+                print(tables.create_table(data).table)
 
         except IndexError:
             output = Padding("[error]Error:[/error] could not process input", (1, 2), style="default")
