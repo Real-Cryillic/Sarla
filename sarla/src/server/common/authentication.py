@@ -2,7 +2,7 @@ import random
 import string
 
 global keyword
-keyword = "schistosomiasis"
+keyword = "schistosomias"
 
 def generate_id():
     id = (random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(8))
