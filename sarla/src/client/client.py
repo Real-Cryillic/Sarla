@@ -32,11 +32,8 @@ help_menu = {
     "agents": "Print a table of current beacons",
     "tasks": "Print a table of currently queued tasks",  # Qeue
     "history": "Print the history for the current session",
+    "back": "Remove current agent"
 }
-
-message = [
-    ("class:server", " Sarla / ")
-]
 
 style = Style.from_dict(
     {
@@ -47,8 +44,21 @@ style = Style.from_dict(
         "port": "#8be9fd",
         "authflag": "ansimagenta",
         "default": "#f8f8f2",
+        "agent": "#8be9fd",
+        "server": "#44475a"
     }
 )
+
+global active_agent
+active_agent = ""
+
+def send_post(url):
+    response = requests.get(url)
+
+    response_json = json.dumps(response.json(), indent=4)
+    data = json.loads(response_json)
+
+    return data
 
 message_completer = NestedCompleter.from_nested_dict(
     {
@@ -56,10 +66,11 @@ message_completer = NestedCompleter.from_nested_dict(
         "listen": None,
         "quit": None,
         "clear": None,
-        "select": None,  # Drop down of available agents
+        # "select": get_agent_map(),  # Drop down of available agents
         "jobs": None,
         "tasks": None,
         "history": None,
+        "back": None
     }
 )
 
@@ -83,13 +94,58 @@ def help():
     output = Padding(table, (0, 1, 0, 1), style="default")
     console.print(output)
 
+def set_message_prompt():
+    if (active_agent != ""): 
+        return [
+            ("class:agent", " " + active_agent),
+            ("class:default", " / ")
+        ]
+    else: 
+        return [
+            ("class:server", " Sarla"),
+            ("class:default", " / ")
+        ]
+    
+def set_message_completer():
+    data = send_post("http://127.0.0.1:5000/api/client/agents")
+
+    list = []
+    map = {}
+
+    for key in data:
+        for subkey, value in key.items():
+            if (subkey == "id"):
+                list.insert(value)
+            else: 
+                pass
+
+    for id in list:
+        map.update({id: None})
+
+    message_completer = NestedCompleter.from_nested_dict(
+        {
+            "help": None,
+            "listen": None,
+            "quit": None,
+            "clear": None,
+            "jobs": None,
+            "tasks": None,
+            "history": None,
+            "back": None,
+            "agents": None,
+            "select": map
+        }
+    )   
+
+    return message_completer
+
 def run():
     print("\033c")  # Clear the current terminal
     ascii.print_ascii(console)
 
     while True:
         input = session.prompt(
-            message,
+            set_message_prompt,
             style=style,
             completer=message_completer,
             auto_suggest=AutoSuggestFromHistory(),
@@ -106,17 +162,32 @@ def run():
                 help()
 
             elif command == "agents":
-                url = "http://127.0.0.1:5000/api/client/agents"
-                response = requests.get(url)
-                response_json = json.dumps(response.json(), indent=4)
-
-                # print(response_json)
-
-                data = json.loads(response_json)
-
-                # print(data)
+                data = send_post("http://127.0.0.1:5000/api/client/agents")
 
                 print(tables.create_table(data).table)
+
+            elif command == "select":
+                if (len(input) > 1):
+                    data = send_post("http://127.0.0.1:5000/api/client/agents")
+
+                    for key in data:
+                        for subkey, value in key.items():
+                            if (subkey == "id"):
+                                if value == input[1]:
+                                    global active_agent
+                                    active_agent = value
+                            else: 
+                                pass
+                else:
+                    output = Padding("[error]Error:[/error] please provide a parameter", (1, 2), style="default")
+                    console.print(output)
+
+            elif command == "back":
+                active_agent = ""
+
+            else:
+                output = Padding("[error]Error:[/error] unknown command", (1, 2), style="default")
+                console.print(output)
 
         except IndexError:
             output = Padding("[error]Error:[/error] could not process input", (1, 2), style="default")
