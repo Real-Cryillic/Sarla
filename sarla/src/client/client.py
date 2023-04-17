@@ -110,11 +110,11 @@ def run():
                 response = requests.get(url)
                 response_json = json.dumps(response.json(), indent=4)
 
-                print(response_json)
+                # print(response_json)
 
                 data = json.loads(response_json)
 
-                print(data)
+                # print(data)
 
                 print(tables.create_table(data).table)
 
