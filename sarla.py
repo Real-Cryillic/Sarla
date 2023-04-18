@@ -1,7 +1,8 @@
-from termcolor import colored
 import click
-import sarla.server.server as server
-import sarla.client.client as client
+from termcolor import colored
+
+from sarla.src.server import server
+from sarla.src.client import client
 
 
 @click.command()

