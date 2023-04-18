@@ -67,8 +67,28 @@ def negotiate():
             
             return key
         
-@app.route('/api/beacon', methods = ('POST', 'GET'))
+@app.route('/api/beacon', methods = ['POST'])
 def beacon():
+    plaintext = strip(request.data)
+
+    data = plaintext.split(",")
+
+    key = data[0]
+
+    filter = {'key': key}
+
+    values = { 
+        "$set": {
+            'beacon': datetime.now().strftime("%H:%M:%S")
+        }
+    }
+
+    print(key)
+
+    agents.update_one(filter, values)
+
+    print("done!")
+
     return "response"
 
 @app.route('/api/client/agents')

