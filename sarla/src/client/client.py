@@ -32,7 +32,7 @@ help_menu = {
     "agents": "Print a table of current beacons",
     "tasks": "Print a table of currently queued tasks",  # Qeue
     "history": "Print the history for the current session",
-    "back": "Remove current agent"
+    "back": "Remove current agent",
 }
 
 style = Style.from_dict(
@@ -45,12 +45,13 @@ style = Style.from_dict(
         "authflag": "ansimagenta",
         "default": "#f8f8f2",
         "agent": "#8be9fd",
-        "server": "#44475a"
+        "server": "#44475a",
     }
 )
 
 global active_agent
 active_agent = ""
+
 
 def send_post(url):
     response = requests.get(url)
@@ -59,6 +60,7 @@ def send_post(url):
     data = json.loads(response_json)
 
     return data
+
 
 message_completer = NestedCompleter.from_nested_dict(
     {
@@ -70,9 +72,10 @@ message_completer = NestedCompleter.from_nested_dict(
         "jobs": None,
         "tasks": None,
         "history": None,
-        "back": None
+        "back": None,
     }
 )
+
 
 def help():
     """
@@ -94,18 +97,14 @@ def help():
     output = Padding(table, (0, 1, 0, 1), style="default")
     console.print(output)
 
+
 def set_message_prompt():
-    if (active_agent != ""): 
-        return [
-            ("class:agent", " " + active_agent),
-            ("class:default", " / ")
-        ]
-    else: 
-        return [
-            ("class:server", " Sarla"),
-            ("class:default", " / ")
-        ]
-    
+    if active_agent != "":
+        return [("class:agent", " " + active_agent), ("class:default", " / ")]
+    else:
+        return [("class:server", " Sarla"), ("class:default", " / ")]
+
+
 def set_message_completer():
     data = send_post("http://127.0.0.1:5000/api/client/agents")
 
@@ -114,9 +113,9 @@ def set_message_completer():
 
     for key in data:
         for subkey, value in key.items():
-            if (subkey == "id"):
+            if subkey == "id":
                 list.insert(value)
-            else: 
+            else:
                 pass
 
     for id in list:
@@ -133,11 +132,12 @@ def set_message_completer():
             "history": None,
             "back": None,
             "agents": None,
-            "select": map
+            "select": map,
         }
-    )   
+    )
 
     return message_completer
+
 
 def run():
     print("\033c")  # Clear the current terminal
@@ -167,28 +167,36 @@ def run():
                 print(tables.create_table(data).table)
 
             elif command == "select":
-                if (len(input) > 1):
+                if len(input) > 1:
                     data = send_post("http://127.0.0.1:5000/api/client/agents")
 
                     for key in data:
                         for subkey, value in key.items():
-                            if (subkey == "id"):
+                            if subkey == "id":
                                 if value == input[1]:
                                     global active_agent
                                     active_agent = value
-                            else: 
+                            else:
                                 pass
                 else:
-                    output = Padding("[error]Error:[/error] please provide a parameter", (1, 2), style="default")
+                    output = Padding(
+                        "[error]Error:[/error] please provide a parameter",
+                        (1, 2),
+                        style="default",
+                    )
                     console.print(output)
 
             elif command == "back":
                 active_agent = ""
 
             else:
-                output = Padding("[error]Error:[/error] unknown command", (1, 2), style="default")
+                output = Padding(
+                    "[error]Error:[/error] unknown command", (1, 2), style="default"
+                )
                 console.print(output)
 
         except IndexError:
-            output = Padding("[error]Error:[/error] could not process input", (1, 2), style="default")
+            output = Padding(
+                "[error]Error:[/error] could not process input", (1, 2), style="default"
+            )
             console.print(output)

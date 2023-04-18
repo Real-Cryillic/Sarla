@@ -1,5 +1,6 @@
 from rich.padding import Padding
 
+
 def print_ascii(console):
     ascii = """\
    ▄▄▄▄▄   ██   █▄▄▄▄ █    ██   ▄█▄    ▄█▄    

@@ -4,6 +4,7 @@ from termcolor import colored
 from sarla.src.server import server
 from sarla.src.client import client
 
+
 @click.command()
 @click.argument("status")
 def command(status):
@@ -15,6 +16,7 @@ def command(status):
 
     else:
         click.echo(colored("Error: Argument unrecognized", "red"))
+
 
 if __name__ == "__main__":
     command()
