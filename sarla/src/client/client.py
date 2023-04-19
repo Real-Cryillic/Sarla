@@ -53,13 +53,17 @@ global active_agent
 active_agent = ""
 
 
-def send_post(url):
+def send_get(url):
     response = requests.get(url)
 
     response_json = json.dumps(response.json(), indent=4)
     data = json.loads(response_json)
 
     return data
+
+
+def send_post(url, data):
+    return requests.post(url, json=data)
 
 
 message_completer = NestedCompleter.from_nested_dict(
@@ -75,6 +79,8 @@ message_completer = NestedCompleter.from_nested_dict(
         "back": None,
     }
 )
+
+command_list = ["whoami", "hostname"]
 
 
 def help():
@@ -106,7 +112,7 @@ def set_message_prompt():
 
 
 def set_message_completer():
-    data = send_post("http://127.0.0.1:5000/api/client/agents")
+    data = send_get("http://127.0.0.1:5000/api/client/agents")
 
     list = []
     map = {}
@@ -162,13 +168,13 @@ def run():
                 help()
 
             elif command == "agents":
-                data = send_post("http://127.0.0.1:5000/api/client/agents")
+                data = send_get("http://127.0.0.1:5000/api/client/agents")
 
                 print(tables.create_table(data).table)
 
             elif command == "select":
                 if len(input) > 1:
-                    data = send_post("http://127.0.0.1:5000/api/client/agents")
+                    data = send_get("http://127.0.0.1:5000/api/client/agents")
 
                     for key in data:
                         for subkey, value in key.items():
@@ -188,6 +194,21 @@ def run():
 
             elif command == "back":
                 active_agent = ""
+
+            elif active_agent != "":
+                if command in command_list:
+                    """
+                    Handle queue errors here
+                    """
+                    json = {"id": active_agent, "command": command}
+
+                    send_post("http://127.0.0.1:5000/api/client/queue", json)
+
+                else:
+                    output = Padding(
+                        "[error]Error:[/error] unknown command", (1, 2), style="default"
+                    )
+                    console.print(output)
 
             else:
                 output = Padding(
