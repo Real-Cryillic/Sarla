@@ -6,6 +6,7 @@ from bson import json_util
 from queue import Queue
 
 import sarla.src.server.common.authentication as auth
+from sarla.src.server.common.pwnboard import update_pwnboard
 
 app = Flask(__name__)
 
@@ -75,8 +76,6 @@ def negotiate():
 
         map.update({id: Queue(maxsize=10)})
 
-        print(map)
-
         return key
 
 
@@ -93,6 +92,8 @@ def beacon():
     values = {"$set": {"beacon": datetime.now().strftime("%H:%M:%S")}}
 
     agents.update_one(filter, values)
+
+    update_pwnboard(("10.1.1.10", 8000))
 
     query = {"id"}
 
