@@ -61,8 +61,9 @@ def send_get(url):
 
     return data
 
+
 def send_post(url, data):
-    return requests.post(url, json = data)
+    return requests.post(url, json=data)
 
 
 message_completer = NestedCompleter.from_nested_dict(
@@ -80,6 +81,7 @@ message_completer = NestedCompleter.from_nested_dict(
 )
 
 command_list = ["whoami", "hostname"]
+
 
 def help():
     """
@@ -207,7 +209,7 @@ def run():
                         "[error]Error:[/error] unknown command", (1, 2), style="default"
                     )
                     console.print(output)
-                    
+
             else:
                 output = Padding(
                     "[error]Error:[/error] unknown command", (1, 2), style="default"

