@@ -25,6 +25,7 @@ def create_table(data):
             "Process Name",
             "System Arch",
             "Key",
+            "Address",
             "Last Check-In",
         ]
     ]
@@ -37,13 +38,15 @@ def create_table(data):
             else:
                 row.append(values)
 
-        order = [3, 7, 2, 6, 5, 0, 4, 1]
+        print(row)
+
+        order = [4, 8, 3, 7, 6, 1, 5, 0, 2]
         row = [row[i] for i in order]
 
-        if check_time(row[7]) != True:
-            row[7] = colored(row[7], "red")
+        if check_time(row[8]) != True:
+            row[8] = colored(row[8], "red")
         else:
-            row[7] = colored(row[7], "green")
+            row[8] = colored(row[8], "green")
 
         table_data.append(row)
 

