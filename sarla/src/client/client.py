@@ -161,7 +161,7 @@ def run():
             if input == "":
                 continue
 
-            input = input.split()
+            input = input.split(" ", 1)
             command = input[0].lower()
 
             if command == "help":
@@ -200,7 +200,16 @@ def run():
                     """
                     Handle queue errors here
                     """
-                    json = {"id": active_agent, "command": command}
+                    if len(input) > 1:
+                        json = {"id": active_agent, "command": command, "param": input[1]}
+                    else:
+                        json = {"id": active_agent, "command": command}
+
+                    send_post("http://127.0.0.1:5000/api/client/queue", json)
+
+                elif command == "command":
+                    if len(input) > 1:
+                        json = {"id": active_agent, "command": input[1]}
 
                     send_post("http://127.0.0.1:5000/api/client/queue", json)
 
