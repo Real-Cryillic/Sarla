@@ -114,7 +114,7 @@ def queue():
     queue = map.get(json["id"])
 
     if "param" in json:
-        queue.put(json["command"] + ":" + json["param"])
+        queue.put(json["command"] + " " + json["param"])
     else:
         queue.put(json["command"])
 

