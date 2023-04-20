@@ -113,13 +113,15 @@ def queue():
 
     queue = map.get(json["id"])
 
-    queue.put(json["command"])
+    if "param" in json:
+        queue.put(json["command"] + ":" + json["param"])
+    else:
+        queue.put(json["command"])
 
     if queue.full():
         return "Error"
     else:
         return ""
-
 
 @app.route("/api/client/agents")
 def get():

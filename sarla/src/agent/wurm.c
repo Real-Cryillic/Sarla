@@ -178,7 +178,7 @@ void http_request() {
 
             goto cleanup;
         } else {
-            log_debug("balls");
+            log_debug("This is inside process response %s", response);
             goto cleanup;
         }
 
