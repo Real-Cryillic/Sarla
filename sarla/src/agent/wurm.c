@@ -473,14 +473,14 @@ float calculate_jitter(int seconds, int percent) {
 int main(int argc, char* argv[]) {
     if (argc == 2) {
         http.address = argv[1];
-        http.port = 1337;
+        http.port = 5000;
 
     } else if (argc == 3) {
         http.address = argv[1];
         http.port = atoi(argv[2]);
     } else {
-        http.address = "127.0.0.1";
-        http.port = 1337;
+        http.address = "sarla.cry.fail";
+        http.port = 5000;
     }
 
     log_info("Address: %s", http.address);
