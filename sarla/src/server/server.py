@@ -105,7 +105,12 @@ def beacon():
         return queue.get()
     else:
         return ""
+    
+@app.route("/api/output", methods=["POST"])
+def output():
+    print(request.data)
 
+    return ""
 
 @app.route("/api/client/queue", methods=["POST"])
 def queue():

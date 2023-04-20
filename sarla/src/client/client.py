@@ -207,6 +207,12 @@ def run():
 
                     send_post("http://127.0.0.1:5000/api/client/queue", json)
 
+                if command == "command":
+                    if len(input) > 1:
+                        json = {"id": active_agent, "command": input[1]}
+
+                    send_post("http://127.0.0.1:5000/api/client/queue", json)
+
                 else:
                     output = Padding(
                         "[error]Error:[/error] unknown command", (1, 2), style="default"

