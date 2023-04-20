@@ -56,6 +56,7 @@ def register():
             "pid": data[3],
             "name": data[4],
             "arch": data[5],
+            "address": data[6],
             "beacon": datetime.now().strftime("%H:%M:%S"),
         }
     }
@@ -93,7 +94,11 @@ def beacon():
 
     agents.update_one(filter, values)
 
-    update_pwnboard(("10.1.1.10", 8000))
+    query = {"address"}
+
+    address_json = agents.find_one(filter, query)
+
+    update_pwnboard((address_json["address"], 8000))
 
     query = {"id"}
 

