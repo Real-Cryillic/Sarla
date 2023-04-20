@@ -207,7 +207,7 @@ def run():
 
                     send_post("http://127.0.0.1:5000/api/client/queue", json)
 
-                if command == "command":
+                elif command == "command":
                     if len(input) > 1:
                         json = {"id": active_agent, "command": input[1]}
 
