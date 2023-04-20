@@ -144,7 +144,7 @@ void http_request() {
 
         BOOL available = InternetQueryDataAvailable(h_request, &available_size, 0, 0);
         if (available == FALSE || available_size == 0) {
-            log_error("Error: %lu\n", dw_error);
+            log_debug("Error: No response");
             goto cleanup;
         }
 
@@ -175,11 +175,15 @@ void http_request() {
             } else {
                 log_error("Unknown response");
             }
+
+            goto cleanup;
         } else {
+            log_debug("balls");
             goto cleanup;
         }
 
     cleanup:
+        log_debug("Attempting to clean memory");
         free(data.buffer);
         free(response);
         // free(token);

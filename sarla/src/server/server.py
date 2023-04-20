@@ -62,7 +62,7 @@ def register():
 
     agents.update_one(filter, values)
 
-    return "response"
+    return ""
 
 
 @app.route("/api/negotiate", methods=["POST"])
