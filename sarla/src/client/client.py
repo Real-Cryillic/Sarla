@@ -103,6 +103,12 @@ def help():
     output = Padding(table, (0, 1, 0, 1), style="default")
     console.print(output)
 
+def quit():
+    input = session.prompt("Are you sure you want to quit? (y/n) Default (y): ")
+    if input.lower() == "n":
+        return False
+    else:
+        return True
 
 def set_message_prompt():
     if active_agent != "":
@@ -166,6 +172,17 @@ def run():
 
             if command == "help":
                 help()
+
+            elif command == "exit":
+                if quit() == True:
+                    return 0
+
+            elif command == "quit":
+                if quit() == True:
+                    return 0
+
+            elif command == "clear":
+                print("\033c")
 
             elif command == "agents":
                 data = send_get("http://127.0.0.1:5000/api/client/agents")
