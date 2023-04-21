@@ -15,5 +15,7 @@ def generate_id():
 
 
 def generate_key(keyword):
-    key = str(abs(hash(keyword)))
-    return key
+    hash = 0
+    for char in keyword:
+        hash += ( hash * 281 ^ ord(char) * 997) & 0xFFFFFFFF
+    return hash
