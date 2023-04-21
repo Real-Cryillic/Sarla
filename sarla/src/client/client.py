@@ -103,12 +103,14 @@ def help():
     output = Padding(table, (0, 1, 0, 1), style="default")
     console.print(output)
 
+
 def quit():
     input = session.prompt("Are you sure you want to quit? (y/n) Default (y): ")
     if input.lower() == "n":
         return False
     else:
         return True
+
 
 def set_message_prompt():
     if active_agent != "":
