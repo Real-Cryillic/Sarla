@@ -38,8 +38,6 @@ def create_table(data):
             else:
                 row.append(values)
 
-        print(row)
-
         order = [4, 8, 3, 7, 6, 1, 5, 0, 2]
         row = [row[i] for i in order]
 

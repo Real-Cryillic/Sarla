@@ -15,5 +15,11 @@ def generate_id():
 
 
 def generate_key(keyword):
-    key = str(abs(hash(keyword)))
-    return key
+    hash = (
+        random.SystemRandom().choice(string.ascii_uppercase + string.ascii_lowercase + string.digits)
+        for _ in range(16)
+    )
+
+    hash = "".join(hash)
+
+    return str(hash)
