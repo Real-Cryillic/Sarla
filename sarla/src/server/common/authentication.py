@@ -18,4 +18,4 @@ def generate_key(keyword):
     hash = 0
     for char in keyword:
         hash += ( hash * 281 ^ ord(char) * 997) & 0xFFFFFFFF
-    return hash
+    return str(hash)
