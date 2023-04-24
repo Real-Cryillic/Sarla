@@ -343,6 +343,7 @@ void register_device() {
     */
 
     DWORD default_length = 256;
+    DWORD username_length = 260;
     DWORD dw_error = GetLastError();
 
     PROCESSENTRY32 process_info;
@@ -361,7 +362,7 @@ void register_device() {
         log_error("Error: %lu", dw_error);
     }
     
-    if (GetUserNameA(info.username, &default_length)) {
+    if (GetUserNameA(info.username, &username_length)) {
         log_info("Username: %s", info.username);
     }
     else {
