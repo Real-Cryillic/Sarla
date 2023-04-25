@@ -53,7 +53,7 @@ global active_agent
 active_agent = ""
 
 
-def send_get(url):
+def get_json(url):
     response = requests.get(url)
 
     response_json = json.dumps(response.json(), indent=4)
@@ -61,6 +61,10 @@ def send_get(url):
 
     return data
 
+def get_plaintext(url):
+    response = requests.get(url)
+
+    return response.text
 
 def send_post(url, data):
     return requests.post(url, json=data)
@@ -118,7 +122,7 @@ def set_message_prompt():
 
 
 def set_message_completer():
-    data = send_get("http://127.0.0.1:5000/api/client/agents")
+    data = get_json("http://127.0.0.1:5000/api/client/agents")
 
     list = []
     map = {}
@@ -185,13 +189,13 @@ def run():
                 print("\033c")
 
             elif command == "agents":
-                data = send_get("http://127.0.0.1:5000/api/client/agents")
+                data = get_json("http://127.0.0.1:5000/api/client/agents")
 
                 print(tables.create_table(data).table)
 
             elif command == "select":
                 if len(input) > 1:
-                    data = send_get("http://127.0.0.1:5000/api/client/agents")
+                    data = get_json("http://127.0.0.1:5000/api/client/agents")
 
                     for key in data:
                         for subkey, value in key.items():
@@ -227,7 +231,7 @@ def run():
                         json = {"id": active_agent, "command": command}
 
                     send_post("http://127.0.0.1:5000/api/client/queue", json)
-
+                
                 elif command == "command":
                     if len(input) > 1:
                         json = {"id": active_agent, "command": input[1]}
@@ -245,6 +249,11 @@ def run():
                     "[error]Error:[/error] unknown command", (1, 2), style="default"
                 )
                 console.print(output)
+
+            output = get_plaintext("http://127.0.0.1:5000/api/output")
+
+            if (output != ""):
+                print(output)
 
         except IndexError:
             output = Padding(
